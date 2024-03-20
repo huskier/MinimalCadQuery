@@ -1,0 +1,16 @@
+
+
+pip says version 40.8.0 of setuptools does not satisfy requirement of setuptools>=40.8.0
+pip install --no-index --find-links=deps --no-build-isolation psycopg[c]            【--no-build-isolation】
+
+Can't build wheel - error: invalid command 'bdist_wheel'
+Install virtualenv and pip in the global directory,create your environment, activate it and install wheel. 
+$ python3 -m pip install wheel After that you do you.
+
+vtk
+typing-extensions
+IPython
+
+Does
+pip install --index-url https://test.pypi.org/simple/  multimethod==1.9.1
+work? I would assume not, since you are not allowing pip to access PyPI, only test PyPI. --extra-index-url allows pip to access both.
