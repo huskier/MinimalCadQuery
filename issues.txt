@@ -1,4 +1,16 @@
 
+python -m build
+python -m twine upload --repository testpypi dist/*
+
+
+
+python -m venv mcpvenv
+python -m pip install --upgrade pip
+pip install wheel
+python -m pip install --extra-index-url https://test.pypi.org/simple/ --no-build-isolation minimalcadquery==0.0.5
+
+
+vtk deps不是显示地加在安装依赖中。。。。。。
 
 pip says version 40.8.0 of setuptools does not satisfy requirement of setuptools>=40.8.0
 pip install --no-index --find-links=deps --no-build-isolation psycopg[c]            【--no-build-isolation】

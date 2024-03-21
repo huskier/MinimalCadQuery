@@ -1,6 +1,6 @@
-import minimalcadquery as cq
+import cadquery as cq
 
-from minimalcadquery.vis import show
+from cadquery.vis import show
 
 cone = cq.Solid.makeCone(1, 0, 2)
 
