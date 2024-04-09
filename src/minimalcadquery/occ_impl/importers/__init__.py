@@ -6,7 +6,7 @@ from OCP.STEPControl import STEPControl_Reader
 
 from ... import cq
 from ..shapes import Shape
-from .dxf import _importDXF
+#from .dxf import _importDXF
 
 RAD2DEG = 360.0 / (2 * pi)
 
@@ -87,7 +87,7 @@ def importStep(fileName: str) -> "cq.Workplane":
 
     return cq.Workplane("XY").newObject(solids)
 
-
+'''
 def importDXF(
     filename: str, tol: float = 1e-6, exclude: List[str] = [], include: List[str] = []
 ) -> "cq.Workplane":
@@ -106,3 +106,4 @@ def importDXF(
     faces = _importDXF(filename, tol, exclude, include)
 
     return cq.Workplane("XY").newObject(faces)
+'''

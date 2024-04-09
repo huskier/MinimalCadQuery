@@ -35,7 +35,7 @@ from .selectors import (
     StringSyntaxSelector,
     Selector,
 )
-from .sketch import Sketch
+#from .sketch import Sketch
 from .cq import CQ, Workplane
 from .assembly import Assembly, Color, Constraint
 from . import selectors
@@ -75,5 +75,5 @@ __all__ = [
     "StringSyntaxSelector",
     "Selector",
     "plugins",
-    "Sketch",
+    #"Sketch",
 ]

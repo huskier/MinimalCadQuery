@@ -1,6 +1,6 @@
-from . import Shape, Workplane, Assembly, Sketch, Compound, Color
+from . import Shape, Workplane, Assembly, Compound, Color
 from .occ_impl.exporters.assembly import _vtkRenderWindow
-from .occ_impl.jupyter_tools import DEFAULT_COLOR
+#from .occ_impl.jupyter_tools import DEFAULT_COLOR
 
 from typing import Union
 
@@ -11,18 +11,21 @@ from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
 from vtkmodules.vtkRenderingCore import vtkMapper, vtkRenderWindowInteractor
 
+DEFAULT_COLOR = [1, 0.8, 0, 1]
 
-def _to_assy(*objs: Union[Shape, Workplane, Assembly, Sketch]) -> Assembly:
+#def _to_assy(*objs: Union[Shape, Workplane, Assembly, Sketch]) -> Assembly:
+def _to_assy(*objs: Union[Shape, Workplane, Assembly]) -> Assembly:
+
 
     assy = Assembly(color=Color(*DEFAULT_COLOR))
 
     for obj in objs:
         if isinstance(obj, (Shape, Workplane, Assembly)):
             assy.add(obj)
-        elif isinstance(obj, Sketch):
-            assy.add(obj._faces)
-            assy.add(Compound.makeCompound(obj._edges))
-            assy.add(Compound.makeCompound(obj._wires))
+        #elif isinstance(obj, Sketch):
+        #    assy.add(obj._faces)
+        #    assy.add(Compound.makeCompound(obj._edges))
+        #    assy.add(Compound.makeCompound(obj._wires))
         elif isinstance(obj, TopoDS_Shape):
             assy.add(Shape(obj))
         else:
@@ -31,7 +34,9 @@ def _to_assy(*objs: Union[Shape, Workplane, Assembly, Sketch]) -> Assembly:
     return assy
 
 
-def show(*objs: Union[Shape, Workplane, Assembly, Sketch]):
+#def show(*objs: Union[Shape, Workplane, Assembly, Sketch]):
+def show(*objs: Union[Shape, Workplane, Assembly]):
+
     """
     Show CQ objects using VTK
     """

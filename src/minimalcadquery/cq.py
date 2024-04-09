@@ -52,16 +52,17 @@ from .occ_impl.shapes import (
 
 from .occ_impl.exporters.svg import getSVG, exportSVG
 
-from .utils import deprecate, deprecate_kwarg_name
+#from .utils import deprecate, deprecate_kwarg_name
 
 from .selectors import (
     Selector,
     StringSyntaxSelector,
 )
 
-from .sketch import Sketch
+#from .sketch import Sketch
 
-CQObject = Union[Vector, Location, Shape, Sketch]
+#CQObject = Union[Vector, Location, Shape, Sketch]
+CQObject = Union[Vector, Location, Shape]
 VectorLike = Union[Tuple[float, float], Tuple[float, float, float], Vector]
 CombineMode = Union[bool, Literal["cut", "a", "s"]]  # a : additive, s: subtractive
 TOL = 1e-6
@@ -354,7 +355,7 @@ class Workplane(object):
 
         return self.newObject(rv)
 
-    @deprecate()
+    #@deprecate()
     def combineSolids(
         self, otherCQToCombine: Optional["Workplane"] = None
     ) -> "Workplane":
@@ -497,6 +498,7 @@ class Workplane(object):
 
         return self
 
+    '''
     def toOCC(self) -> Any:
         """
         Directly returns the wrapped OCCT object.
@@ -508,6 +510,7 @@ class Workplane(object):
         v = self.val()
 
         return v._faces if isinstance(v, Sketch) else v.wrapped
+    '''
 
     def workplane(
         self: T,
@@ -791,7 +794,7 @@ class Workplane(object):
 
         return found
 
-    @deprecate()
+    #@deprecate()
     def findFace(self, searchStack: bool = True, searchParents: bool = True) -> Face:
         """
         Finds the first face object in the chain, searching from the current node
@@ -2495,8 +2498,8 @@ class Workplane(object):
             for o in self.objects:
                 if isinstance(o, (Vector, Shape)):
                     pnts.append(loc.inverse * Location(plane, o.Center()))
-                elif isinstance(o, Sketch):
-                    pnts.append(loc.inverse * Location(plane, o._faces.Center()))
+                #elif isinstance(o, Sketch):
+                #    pnts.append(loc.inverse * Location(plane, o._faces.Center()))
                 else:
                     pnts.append(o)
 
@@ -3616,9 +3619,9 @@ class Workplane(object):
 
         rv: List[Face] = []
 
-        for el in self.objects:
-            if isinstance(el, Sketch):
-                rv.extend(el)
+        #for el in self.objects:
+        #    if isinstance(el, Sketch):
+        #        rv.extend(el)
 
         if not rv:
             rv.extend(wiresToFaces(self.ctx.popPendingWires()))
@@ -4173,7 +4176,7 @@ class Workplane(object):
 
         return self.newObject(cleanObjects)
 
-    @deprecate_kwarg_name("cut", "combine='cut'")
+    #@deprecate_kwarg_name("cut", "combine='cut'")
     def text(
         self: T,
         txt: str,
@@ -4326,6 +4329,7 @@ class Workplane(object):
 
         return locs
 
+    '''
     def sketch(self: T) -> Sketch:
         """
         Initialize and return a sketch
@@ -4356,7 +4360,9 @@ class Workplane(object):
             rv.append(s_new)
 
         return self.newObject(rv)
+    '''
 
+    '''
     def _repr_javascript_(self) -> Any:
         """
         Special method for rendering current object in a jupyter notebook
@@ -4368,7 +4374,7 @@ class Workplane(object):
             return Compound.makeCompound(
                 _selectShapes(self.objects)
             )._repr_javascript_()
-
+    '''
 
 # alias for backward compatibility
 CQ = Workplane

@@ -1,6 +1,15 @@
 
+2024.04.09 删除了hull.py，并且将sketch.py中的hull相关的代码也删除了。。。。。。
+
+Q：sketch.py中的Point和hull.py中的Point有什么不同吗？？？
+Point = Union[Vector, Tuple[Real, Real]]
+class Point:
+
 python -m build
 python -m twine upload --repository testpypi dist/*
+
+
+python -m pip install --index-url https://test.pypi.org/simple/ --no-deps minimalcadquery==0.0.7
 
 
 

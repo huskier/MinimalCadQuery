@@ -8,7 +8,7 @@ from typing_extensions import Literal
 from OCP.VrmlAPI import VrmlAPI
 
 from ...cq import Workplane
-from ...utils import deprecate
+#from ...utils import deprecate
 from ..shapes import Shape
 
 from .svg import getSVG
@@ -133,14 +133,14 @@ def export(
         raise ValueError("Unknown export type")
 
 
-@deprecate()
+#@deprecate()
 def toString(shape, exportType, tolerance=0.1, angularTolerance=0.05):
     s = StringIO.StringIO()
     exportShape(shape, exportType, s, tolerance, angularTolerance)
     return s.getvalue()
 
 
-@deprecate()
+#@deprecate()
 def exportShape(
     w: Union[Shape, Workplane],
     exportType: ExportLiterals,
@@ -212,7 +212,7 @@ def exportShape(
         fileLike.write(res)
 
 
-@deprecate()
+#@deprecate()
 def readAndDeleteFile(fileName):
     """
     Read data from file provided, and delete it when done

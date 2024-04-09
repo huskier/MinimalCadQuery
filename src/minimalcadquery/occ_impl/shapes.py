@@ -27,7 +27,7 @@ from ..selectors import (
     StringSyntaxSelector,
 )
 
-from ..utils import cqmultimethod as multimethod
+#from ..utils import cqmultimethod as multimethod
 
 # change default OCCT logging level
 from OCP.Message import Message, Message_Gravity
@@ -268,7 +268,10 @@ from math import pi, sqrt, inf, radians, cos
 
 import warnings
 
-from ..utils import deprecate
+#from ..utils import deprecate
+
+from multimethod import multimethod, DispatchError
+
 
 Real = Union[float, int]
 
@@ -329,6 +332,14 @@ ancestors_LUT = {
 }
 
 T = TypeVar("T", bound="Shape")
+
+class cqmultimethod(multimethod):
+    def __call__(self, *args, **kwargs):
+
+        try:
+            return super().__call__(*args, **kwargs)
+        except DispatchError:
+            return next(iter(self.values()))(*args, **kwargs)
 
 
 def shapetype(obj: TopoDS_Shape) -> TopAbs_ShapeEnum:
@@ -2892,7 +2903,7 @@ class Mixin3D(object):
 
         return solid_classifier.State() == ta.TopAbs_IN or solid_classifier.IsOnAFace()
 
-    @multimethod
+    @cqmultimethod
     def dprism(
         self: TS,
         basis: Optional[Face],
@@ -2962,7 +2973,7 @@ class Solid(Shape, Mixin3D):
     wrapped: TopoDS_Solid
 
     @classmethod
-    @deprecate()
+    #@deprecate()
     def interpPlate(
         cls,
         surf_edges,
@@ -3248,7 +3259,7 @@ class Solid(Shape, Mixin3D):
         extrude_builder.MakeSolid()
         return extrude_builder.Shape()
 
-    @multimethod
+    @cqmultimethod
     def extrudeLinearWithRotation(
         cls,
         outerWire: Wire,
@@ -3320,7 +3331,7 @@ class Solid(Shape, Mixin3D):
             face.outerWire(), face.innerWires(), vecCenter, vecNormal, angleDegrees
         )
 
-    @multimethod
+    @cqmultimethod
     def extrudeLinear(
         cls,
         outerWire: Wire,
@@ -3381,7 +3392,7 @@ class Solid(Shape, Mixin3D):
 
         return cls(prism_builder.Shape())
 
-    @multimethod
+    @cqmultimethod
     def revolve(
         cls,
         outerWire: Wire,
@@ -3468,7 +3479,7 @@ class Solid(Shape, Mixin3D):
 
         return rv
 
-    @multimethod
+    @cqmultimethod
     def sweep(
         cls,
         outerWire: Wire,
