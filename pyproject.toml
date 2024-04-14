@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "minimalcadquery"
-version = "0.0.14"
+version = "0.0.16"
 authors = [
   { name="Simon Huskier", email="huskier@gmail.com" },
 ]
