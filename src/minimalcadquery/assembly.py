@@ -584,6 +584,7 @@ class Assembly(object):
 
         return Compound.makeCompound(shapes).locate(self.loc)
 
+'''
     def _repr_javascript_(self):
         """
         Jupyter 3D representation support
@@ -592,3 +593,4 @@ class Assembly(object):
         from .occ_impl.jupyter_tools import display
 
         return display(self)._repr_javascript_()
+'''

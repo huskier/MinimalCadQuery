@@ -224,6 +224,7 @@ class Workplane(object):
         self.ctx = CQContext()
         self._tag = None
 
+    '''
     def tag(self: T, name: str) -> T:
         """
         Tags the current CQ object for later reference.
@@ -235,6 +236,7 @@ class Workplane(object):
         self.ctx.tags[name] = self
 
         return self
+    '''
 
     def _collectProperty(self, propName: str) -> List[CQObject]:
         """
@@ -266,6 +268,7 @@ class Workplane(object):
 
         return list(rv.keys())
 
+    '''
     @overload
     def split(self: T, keepTop: bool = False, keepBottom: bool = False) -> T:
         ...
@@ -354,7 +357,9 @@ class Workplane(object):
                     rv = [bottom]
 
         return self.newObject(rv)
-
+    '''
+    
+    '''
     #@deprecate()
     def combineSolids(
         self, otherCQToCombine: Optional["Workplane"] = None
@@ -396,7 +401,9 @@ class Workplane(object):
             s = s.fuse(*_selectShapes(toCombine))
 
         return self.newObject([s])
+    '''
 
+    '''
     def all(self: T) -> List[T]:
         """
         Return a list of all CQ objects on the stack.
@@ -414,6 +421,7 @@ class Workplane(object):
         Return the number of objects currently on the stack
         """
         return len(self.objects)
+    '''
 
     def vals(self) -> List[CQObject]:
         """
@@ -426,6 +434,7 @@ class Workplane(object):
         """
         return self.objects
 
+    '''
     @overload
     def add(self: T, obj: "Workplane") -> T:
         ...
@@ -461,6 +470,7 @@ class Workplane(object):
         else:
             self.objects.append(obj)
         return self
+    '''
 
     def val(self) -> CQObject:
         """
@@ -471,6 +481,7 @@ class Workplane(object):
         """
         return self.objects[0] if self.objects else self.plane.origin
 
+    '''
     def _getTagged(self: T, name: str) -> T:
         """
         Search the parent chain for an object with tag == name.
@@ -485,7 +496,9 @@ class Workplane(object):
             raise ValueError(f"No Workplane object named {name} in chain")
 
         return cast(T, rv)
+    '''
 
+    '''
     def _mergeTags(self: T, obj: "Workplane") -> T:
         """
         Merge tags
@@ -497,6 +510,7 @@ class Workplane(object):
             self.ctx.tags = {**obj.ctx.tags, **self.ctx.tags}
 
         return self
+    '''
 
     '''
     def toOCC(self) -> Any:
@@ -512,6 +526,7 @@ class Workplane(object):
         return v._faces if isinstance(v, Sketch) else v.wrapped
     '''
 
+    '''
     def workplane(
         self: T,
         offset: float = 0.0,
@@ -696,7 +711,9 @@ class Workplane(object):
         tagged = self._getTagged(name)
         out = self.copyWorkplane(tagged)
         return out
+    '''
 
+    '''        
     def first(self: T) -> T:
         """
         Return the first item on the stack
@@ -747,6 +764,7 @@ class Workplane(object):
                 raise ValueError("Cannot End the chain-- no parents!")
 
         return rv
+    '''
 
     def _findType(self, types, searchStack=True, searchParents=True):
 
@@ -762,6 +780,7 @@ class Workplane(object):
 
         return None
 
+    '''
     def findSolid(
         self, searchStack: bool = True, searchParents: bool = True
     ) -> Union[Solid, Compound]:
@@ -812,7 +831,9 @@ class Workplane(object):
             raise ValueError("Cannot find a face {}in the parent chain".format(message))
 
         return found
+    '''
 
+    '''
     def _selectObjects(
         self: T,
         objType: Any,
@@ -837,7 +858,8 @@ class Workplane(object):
         toReturn = cq_obj._collectProperty(objType)
 
         return self.newObject(self._filter(toReturn, selector))
-
+    '''
+        
     def _filter(self, objs, selector: Optional[Union[Selector, str]]):
 
         selectorObj: Selector
@@ -852,6 +874,7 @@ class Workplane(object):
 
         return toReturn
 
+    '''
     def vertices(
         self: T,
         selector: Optional[Union[Selector, str]] = None,
@@ -1009,7 +1032,9 @@ class Workplane(object):
         multiple solids.
         """
         return self._selectObjects("Solids", selector, tag)
+    '''
 
+    '''
     def shells(
         self: T,
         selector: Optional[Union[Selector, str]] = None,
@@ -1032,7 +1057,9 @@ class Workplane(object):
         typically be composed of multiple faces.
         """
         return self._selectObjects("Shells", selector, tag)
+    '''
 
+    '''    
     def compounds(
         self: T,
         selector: Optional[Union[Selector, str]] = None,
@@ -1053,7 +1080,9 @@ class Workplane(object):
         a union, cut, split, or fillet.  Compounds can contain multiple edges, wires, or solids.
         """
         return self._selectObjects("Compounds", selector, tag)
+    '''
 
+    '''
     def ancestors(self: T, kind: Shapes, tag: Optional[str] = None) -> T:
         """
         Select topological ancestors.
@@ -1090,7 +1119,9 @@ class Workplane(object):
         results = [el.siblings(ctx_solid, kind, level) for el in shapes]
 
         return self.newObject(set(el for res in results for el in res) - set(shapes))
+    '''
 
+    '''
     def toSvg(self, opts: Any = None) -> str:
         """
         Returns svg text that represents the first item on the stack.
@@ -1112,7 +1143,9 @@ class Workplane(object):
         :param fileName: the filename to export, absolute path to the file
         """
         exportSVG(self, fileName)
+    '''
 
+    '''    
     def rotateAboutCenter(self: T, axisEndPoint: VectorLike, angleDegrees: float) -> T:
         """
         Rotates all items on the stack by the specified angle, about the specified axis
@@ -1371,6 +1404,7 @@ class Workplane(object):
         ns.plane = p
 
         return ns
+    '''
 
     def newObject(self: T, objlist: Iterable[CQObject]) -> T:
         """
@@ -1450,6 +1484,7 @@ class Workplane(object):
 
         return rv
 
+    '''
     def rarray(
         self: T,
         xSpacing: float,
@@ -1546,7 +1581,9 @@ class Workplane(object):
             locs.append(loc)
 
         return self.pushPoints(locs)
+    '''
 
+    '''
     def pushPoints(self: T, pntList: Iterable[Union[VectorLike, Location]]) -> T:
         """
         Pushes a list of points onto the stack as vertices.
@@ -1579,7 +1616,9 @@ class Workplane(object):
             )
 
         return self.newObject(vecs)
+    '''
 
+    '''
     def center(self: T, x: float, y: float) -> T:
         """
         Shift local coordinates to the specified location.
@@ -1610,7 +1649,9 @@ class Workplane(object):
         n = self.newObject([new_origin])
         n.plane.setOrigin2d(x, y)
         return n
+    '''
 
+    '''
     def lineTo(self: T, x: float, y: float, forConstruction: bool = False) -> T:
         """
         Make a line from the current point to the provided point
@@ -1690,7 +1731,9 @@ class Workplane(object):
         """
         p = self._findFromPoint(True)
         return self.lineTo(xCoord, p.y, forConstruction)
+    '''
 
+    '''
     def polarLine(
         self: T, distance: float, angle: float, forConstruction: bool = False
     ) -> T:
@@ -1723,7 +1766,9 @@ class Workplane(object):
         y = math.sin(math.radians(angle)) * distance
 
         return self.lineTo(x, y, forConstruction)
+    '''
 
+    '''
     # absolute move in current plane, not drawing
     def moveTo(self: T, x: float = 0, y: float = 0) -> T:
         """
@@ -1762,7 +1807,9 @@ class Workplane(object):
         p = self._findFromPoint(True)
         newCenter = p + Vector(xDist, yDist, 0)
         return self.newObject([self.plane.toWorldCoords(newCenter)])
-
+    '''
+        
+    '''
     def slot2D(self: T, length: float, diameter: float, angle: float = 0) -> T:
         """
         Creates a rounded slot for each point on the stack.
@@ -1795,6 +1842,7 @@ class Workplane(object):
         slot = slot.rotate(Vector(), Vector(0, 0, 1), angle)
 
         return self.eachpoint(lambda loc: slot.moved(loc), True)
+    '''
 
     def _toVectors(
         self, pts: Iterable[VectorLike], includeCurrent: bool
@@ -1810,6 +1858,7 @@ class Workplane(object):
 
         return allPoints
 
+    '''
     def spline(
         self: T,
         listOfXYTuple: Iterable[VectorLike],
@@ -2111,7 +2160,9 @@ class Workplane(object):
                 self._addPendingEdge(e)
 
         return self.newObject([rv_w if makeWire else e])
+    '''
 
+    '''    
     def threePointArc(
         self: T, point1: VectorLike, point2: VectorLike, forConstruction: bool = False,
     ) -> T:
@@ -2245,7 +2296,9 @@ class Workplane(object):
             self._addPendingEdge(arc)
 
         return self.newObject([arc])
+    '''
 
+    '''
     def mirrorY(self: T) -> T:
         """
         Mirror entities around the y axis of the workplane plane.
@@ -2301,7 +2354,7 @@ class Workplane(object):
 
         # attempt again to consolidate all of the wires
         return consolidated.consolidateWires()
-
+    '''
     def _addPendingEdge(self, edge: Edge) -> None:
         """
         Queues an edge for later combination into a wire.
@@ -2399,6 +2452,7 @@ class Workplane(object):
 
         return self.newObject(others + [w])
 
+    '''
     def each(
         self: T,
         callback: Callable[[CQObject], Shape],
@@ -2457,6 +2511,7 @@ class Workplane(object):
             results.append(r)
 
         return self._combineWithBase(results, combine, clean)
+    '''
 
     def eachpoint(
         self: T,
@@ -2574,6 +2629,7 @@ class Workplane(object):
 
         return self.eachpoint(lambda loc: w.moved(loc), True)
 
+    '''
     # circle from current point
     def circle(self: T, radius: float, forConstruction: bool = False) -> T:
         """
@@ -2646,7 +2702,9 @@ class Workplane(object):
         e.forConstruction = forConstruction
 
         return self.eachpoint(lambda loc: e.moved(loc), True)
-
+    '''
+        
+    '''
     def polygon(
         self: T,
         nSides: int,
@@ -2732,7 +2790,9 @@ class Workplane(object):
                 self._addPendingEdge(edges[-1])
 
         return self.newObject(edges)
+    '''
 
+    '''
     def close(self: T) -> T:
         """
         End construction, and attempt to build a closed wire.
@@ -2766,7 +2826,9 @@ class Workplane(object):
         self.ctx.firstPoint = None
 
         return self.wire()
+    '''
 
+    '''
     def largestDimension(self) -> float:
         """
         Finds the largest dimension in the stack.
@@ -2781,7 +2843,9 @@ class Workplane(object):
         compound = self.findSolid()
 
         return compound.BoundingBox().DiagonalLength
+    '''
 
+    '''
     def cutEach(
         self: T,
         fcn: Callable[[Location], Shape],
@@ -2976,7 +3040,9 @@ class Workplane(object):
         )  # local coordinates!
 
         return self.cutEach(lambda loc: h.moved(loc), True, clean)
+    '''
 
+    '''        
     # TODO: duplicated code with _extrude and extrude
     def twistExtrude(
         self: T,
@@ -3027,6 +3093,7 @@ class Workplane(object):
         r = Compound.makeCompound(shapes).fuse()
 
         return self._combineWithBase(r, combine, clean)
+    '''
 
     def extrude(
         self: T,
@@ -3092,6 +3159,7 @@ class Workplane(object):
 
         return self._combineWithBase(r, combine, clean)
 
+    '''
     def revolve(
         self: T,
         angleDegrees: float = 360.0,
@@ -3155,7 +3223,9 @@ class Workplane(object):
         r = self._revolve(angleDegrees, axisStart, axisEnd)
 
         return self._combineWithBase(r, combine, clean)
+    '''
 
+    '''
     def sweep(
         self: T,
         path: Union["Workplane", Wire, Edge],
@@ -3207,6 +3277,7 @@ class Workplane(object):
         )  # returns a Solid (or a compound if there were multiple)
 
         return self._combineWithBase(r, combine, clean)
+    '''
 
     def _combineWithBase(
         self: T,
@@ -3280,6 +3351,7 @@ class Workplane(object):
 
         return self.newObject([r])
 
+    '''
     def combine(
         self: T, clean: bool = True, glue: bool = False, tol: Optional[float] = None,
     ) -> T:
@@ -3355,7 +3427,9 @@ class Workplane(object):
             r = r.clean()
 
         return self.newObject([r])
+    '''
 
+    '''
     def __or__(self: T, toUnion: Union["Workplane", Solid, Compound]) -> T:
         """
         Syntactic sugar for union.
@@ -3377,7 +3451,9 @@ class Workplane(object):
         Notice that :code:`r = a + b` is equivalent to :code:`r = a.union(b)` and :code:`r = a | b`.
         """
         return self.union(toUnion)
-
+    '''
+    
+    '''
     def cut(
         self: T,
         toCut: Union["Workplane", Solid, Compound],
@@ -3413,7 +3489,9 @@ class Workplane(object):
             newS = newS.clean()
 
         return self.newObject([newS])
+    '''
 
+    '''
     def __sub__(self: T, toUnion: Union["Workplane", Solid, Compound]) -> T:
         """
         Syntactic sugar for cut.
@@ -3427,7 +3505,9 @@ class Workplane(object):
             result = Box - Sphere
         """
         return self.cut(toUnion)
+    '''
 
+    '''
     def intersect(
         self: T,
         toIntersect: Union["Workplane", Solid, Compound],
@@ -3463,7 +3543,9 @@ class Workplane(object):
             newS = newS.clean()
 
         return self.newObject([newS])
+    '''
 
+    '''
     def __and__(self: T, toUnion: Union["Workplane", Solid, Compound]) -> T:
         """
         Syntactic sugar for intersect.
@@ -3477,7 +3559,9 @@ class Workplane(object):
             result = Box & Sphere
         """
         return self.intersect(toUnion)
+    '''
 
+    '''
     def cutBlind(
         self: T,
         until: Union[float, Literal["next", "last"], Face],
@@ -3581,7 +3665,9 @@ class Workplane(object):
             s = s.clean()
 
         return self.newObject([s])
+    '''
 
+    '''
     def loft(
         self: T, ruled: bool = False, combine: CombineMode = True, clean: bool = True
     ) -> T:
@@ -3611,6 +3697,7 @@ class Workplane(object):
         newS = self._combineWithBase(r, combine, clean)
 
         return newS
+    '''
 
     def _getFaces(self) -> List[Face]:
         """
@@ -3739,6 +3826,7 @@ class Workplane(object):
 
         return res
 
+    '''
     def _revolve(
         self, angleDegrees: float, axisStart: VectorLike, axisEnd: VectorLike
     ) -> Compound:
@@ -3816,7 +3904,9 @@ class Workplane(object):
             toFuse.append(thisObj)
 
         return Compound.makeCompound(toFuse)
+    '''
 
+    '''
     def interpPlate(
         self: T,
         surf_edges: Union[
@@ -3892,6 +3982,7 @@ class Workplane(object):
         s = f.thicken(thickness) if thickness > 0 else f
 
         return self.eachpoint(lambda loc: s.moved(loc), True, combine, clean)
+    '''
 
     def box(
         self: T,
@@ -3960,6 +4051,7 @@ class Workplane(object):
 
         return self.eachpoint(lambda loc: box.moved(loc), True, combine, clean)
 
+    '''
     def sphere(
         self: T,
         radius: float,
@@ -4077,7 +4169,8 @@ class Workplane(object):
 
         # We want a cylinder for each point on the workplane
         return self.eachpoint(lambda loc: s.moved(loc), True, combine, clean)
-
+    '''
+    '''
     def wedge(
         self: T,
         dx: float,
@@ -4147,6 +4240,7 @@ class Workplane(object):
 
         # We want a wedge for each point on the workplane
         return self.eachpoint(lambda loc: w.moved(loc), True, combine, clean)
+    '''
 
     def clean(self: T) -> T:
         """
@@ -4176,6 +4270,7 @@ class Workplane(object):
 
         return self.newObject(cleanObjects)
 
+    '''
     #@deprecate_kwarg_name("cut", "combine='cut'")
     def text(
         self: T,
@@ -4250,7 +4345,9 @@ class Workplane(object):
             combine = "cut"
 
         return self._combineWithBase(r, combine, clean)
+    '''
 
+    '''
     def section(self: T, height: float = 0.0) -> T:
         """
         Slices current solid at the given height.
@@ -4269,6 +4366,7 @@ class Workplane(object):
         r = solidRef.intersect(plane)
 
         return self.newObject([r])
+    '''
 
     def toPending(self: T) -> T:
         """
@@ -4282,6 +4380,7 @@ class Workplane(object):
 
         return self
 
+    '''
     def offset2D(
         self: T,
         d: float,
@@ -4310,7 +4409,9 @@ class Workplane(object):
             self.ctx.pendingWires = rv
 
         return self.newObject(rv)
+    '''
 
+    '''
     def _locs(self: T) -> List[Location]:
         """
         Convert items on the stack into locations.
@@ -4328,6 +4429,7 @@ class Workplane(object):
             locs.append(self.plane.location)
 
         return locs
+    '''
 
     '''
     def sketch(self: T) -> Sketch:
