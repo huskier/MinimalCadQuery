@@ -5,35 +5,20 @@ import io as StringIO
 from typing import IO, Optional, Union, cast, Dict, Any
 from typing_extensions import Literal
 
-from OCP.VrmlAPI import VrmlAPI
-
 from ...cq import Workplane
-#from ...utils import deprecate
 from ..shapes import Shape
 
-from .svg import getSVG
-from .json import JsonMesh
-from .amf import AmfWriter
-from .threemf import ThreeMFWriter
-from .dxf import exportDXF, DxfDocument
-from .vtk import exportVTP
+#from .svg import getSVG
+
 from .utils import toCompound
 
 
 class ExportTypes:
-    STL = "STL"
     STEP = "STEP"
-    AMF = "AMF"
     SVG = "SVG"
-    TJS = "TJS"
-    DXF = "DXF"
-    VRML = "VRML"
-    VTP = "VTP"
-    THREEMF = "3MF"
-
 
 ExportLiterals = Literal[
-    "STL", "STEP", "AMF", "SVG", "TJS", "DXF", "VRML", "VTP", "3MF"
+    "STEP"
 ]
 
 
@@ -75,59 +60,12 @@ def export(
         else:
             raise ValueError("Unknown extensions, specify export type explicitly")
 
-    if exportType == ExportTypes.TJS:
-        tess = shape.tessellate(tolerance, angularTolerance)
-        mesher = JsonMesh()
+    #if exportType == ExportTypes.SVG:
+    #    with open(fname, "w") as f:
+    #        f.write(getSVG(shape, opt))
 
-        # add vertices
-        for v in tess[0]:
-            mesher.addVertex(v.x, v.y, v.z)
-
-        # add triangles
-        for ixs in tess[1]:
-            mesher.addTriangleFace(*ixs)
-
-        with open(fname, "w") as f:
-            f.write(mesher.toJson())
-
-    elif exportType == ExportTypes.SVG:
-        with open(fname, "w") as f:
-            f.write(getSVG(shape, opt))
-
-    elif exportType == ExportTypes.AMF:
-        tess = shape.tessellate(tolerance, angularTolerance)
-        aw = AmfWriter(tess)
-        with open(fname, "wb") as f:
-            aw.writeAmf(f)
-
-    elif exportType == ExportTypes.THREEMF:
-        tmfw = ThreeMFWriter(shape, tolerance, angularTolerance, **opt)
-        with open(fname, "wb") as f:
-            tmfw.write3mf(f)
-
-    elif exportType == ExportTypes.DXF:
-        if isinstance(w, Workplane):
-            exportDXF(w, fname, **opt)
-        else:
-            raise ValueError("Only Workplanes can be exported as DXF")
-
-    elif exportType == ExportTypes.STEP:
+    if exportType == ExportTypes.STEP:
         shape.exportStep(fname, **opt)
-
-    elif exportType == ExportTypes.STL:
-        if opt:
-            useascii = opt.get("ascii", False) or opt.get("ASCII", False)
-        else:
-            useascii = False
-
-        shape.exportStl(fname, tolerance, angularTolerance, useascii)
-
-    elif exportType == ExportTypes.VRML:
-        shape.mesh(tolerance, angularTolerance)
-        VrmlAPI.Write_s(shape.wrapped, fname)
-
-    elif exportType == ExportTypes.VTP:
-        exportVTP(shape, fname, tolerance, angularTolerance)
 
     else:
         raise ValueError("Unknown export type")
@@ -169,29 +107,9 @@ def exportShape(
     else:
         shape = w
 
-    if exportType == ExportTypes.TJS:
-        tess = tessellate(shape, angularTolerance)
-        mesher = JsonMesh()
-
-        # add vertices
-        for v in tess[0]:
-            mesher.addVertex(v.x, v.y, v.z)
-
-        # add triangles
-        for t in tess[1]:
-            mesher.addTriangleFace(*t)
-
-        fileLike.write(mesher.toJson())
-
-    elif exportType == ExportTypes.SVG:
-        fileLike.write(getSVG(shape))
-    elif exportType == ExportTypes.AMF:
-        tess = tessellate(shape, angularTolerance)
-        aw = AmfWriter(tess)
-        aw.writeAmf(fileLike)
-    elif exportType == ExportTypes.THREEMF:
-        tmfw = ThreeMFWriter(shape, tolerance, angularTolerance)
-        tmfw.write3mf(fileLike)
+    if exportType == ExportTypes.SVG:
+        #fileLike.write(getSVG(shape))
+        pass
     else:
 
         # all these types required writing to a file and then
@@ -203,8 +121,6 @@ def exportShape(
 
         if exportType == ExportTypes.STEP:
             shape.exportStep(outFileName)
-        elif exportType == ExportTypes.STL:
-            shape.exportStl(outFileName, tolerance, angularTolerance, True)
         else:
             raise ValueError("No idea how i got here")
 

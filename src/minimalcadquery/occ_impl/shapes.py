@@ -19,7 +19,7 @@ from io import BytesIO
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkTriangleFilter, vtkPolyDataNormals
 
-from .geom import Vector, VectorLike, BoundBox, Plane, Location, Matrix
+from .geom import Vector, VectorLike, Plane, Location, Matrix
 from .shape_protocols import geom_LUT_FACE, geom_LUT_EDGE, Shapes, Geoms
 
 from ..selectors import (
@@ -268,8 +268,6 @@ from math import pi, sqrt, inf, radians, cos
 
 import warnings
 
-#from ..utils import deprecate
-
 from multimethod import multimethod, DispatchError
 
 
@@ -430,39 +428,6 @@ class Shape(object):
 
         return tr
 
-    def exportStl(
-        self,
-        fileName: str,
-        tolerance: float = 1e-3,
-        angularTolerance: float = 0.1,
-        ascii: bool = False,
-        relative: bool = True,
-        parallel: bool = True,
-    ) -> bool:
-        """
-        Exports a shape to a specified STL file.
-
-        :param fileName: The path and file name to write the STL output to.
-        :param tolerance: A linear deflection setting which limits the distance between a curve and its tessellation.
-            Setting this value too low will result in large meshes that can consume computing resources.
-            Setting the value too high can result in meshes with a level of detail that is too low.
-            Default is 1e-3, which is a good starting point for a range of cases.
-        :param angularTolerance: Angular deflection setting which limits the angle between subsequent segments in a polyline. Default is 0.1.
-        :param ascii: Export the file as ASCII (True) or binary (False) STL format.  Default is binary.
-        :param relative: If True, tolerance will be scaled by the size of the edge being meshed. Default is True.
-            Setting this value to True may cause large features to become faceted, or small features dense.
-        :param parallel: If True, OCCT will use parallel processing to mesh the shape. Default is True.
-        """
-        # The constructor used here automatically calls mesh.Perform(). https://dev.opencascade.org/doc/refman/html/class_b_rep_mesh___incremental_mesh.html#a3a383b3afe164161a3aa59a492180ac6
-        BRepMesh_IncrementalMesh(
-            self.wrapped, tolerance, relative, angularTolerance, parallel
-        )
-
-        writer = StlAPI_Writer()
-        writer.ASCIIMode = ascii
-
-        return writer.Write(self.wrapped, fileName)
-
     def exportStep(self, fileName: str, **kwargs) -> IFSelect_ReturnStatus:
         """
         Export this shape to a STEP file.
@@ -491,30 +456,6 @@ class Shape(object):
         writer.Transfer(self.wrapped, STEPControl_AsIs)
 
         return writer.Write(fileName)
-
-    def exportBrep(self, f: Union[str, BytesIO]) -> bool:
-        """
-        Export this shape to a BREP file
-        """
-
-        rv = BRepTools.Write_s(self.wrapped, f)
-
-        return True if rv is None else rv
-
-    @classmethod
-    def importBrep(cls, f: Union[str, BytesIO]) -> "Shape":
-        """
-        Import shape from a BREP file
-        """
-        s = TopoDS_Shape()
-        builder = BRep_Builder()
-
-        BRepTools.Read_s(s, f, builder)
-
-        if s.IsNull():
-            raise ValueError(f"Could not import {f}")
-
-        return cls.cast(s)
 
     def geomType(self) -> Geoms:
         """
@@ -594,54 +535,6 @@ class Shape(object):
         """
         return BRepCheck_Analyzer(self.wrapped).IsValid()
 
-    def BoundingBox(
-        self, tolerance: Optional[float] = None
-    ) -> BoundBox:  # need to implement that in GEOM
-        """
-        Create a bounding box for this Shape.
-
-        :param tolerance: Tolerance value passed to :class:`BoundBox`
-        :returns: A :class:`BoundBox` object for this Shape
-        """
-        return BoundBox._fromTopoDS(self.wrapped, tol=tolerance)
-
-    def mirror(
-        self,
-        mirrorPlane: Union[
-            Literal["XY", "YX", "XZ", "ZX", "YZ", "ZY"], VectorLike
-        ] = "XY",
-        basePointVector: VectorLike = (0, 0, 0),
-    ) -> "Shape":
-        """
-        Applies a mirror transform to this Shape. Does not duplicate objects
-        about the plane.
-
-        :param mirrorPlane: The direction of the plane to mirror about - one of
-            'XY', 'XZ' or 'YZ'
-        :param basePointVector: The origin of the plane to mirror about
-        :returns: The mirrored shape
-        """
-        if isinstance(mirrorPlane, str):
-            if mirrorPlane == "XY" or mirrorPlane == "YX":
-                mirrorPlaneNormalVector = gp_Dir(0, 0, 1)
-            elif mirrorPlane == "XZ" or mirrorPlane == "ZX":
-                mirrorPlaneNormalVector = gp_Dir(0, 1, 0)
-            elif mirrorPlane == "YZ" or mirrorPlane == "ZY":
-                mirrorPlaneNormalVector = gp_Dir(1, 0, 0)
-        else:
-            if isinstance(mirrorPlane, tuple):
-                mirrorPlaneNormalVector = gp_Dir(*mirrorPlane)
-            elif isinstance(mirrorPlane, Vector):
-                mirrorPlaneNormalVector = mirrorPlane.toDir()
-
-        if isinstance(basePointVector, tuple):
-            basePointVector = Vector(basePointVector)
-
-        T = gp_Trsf()
-        T.SetMirror(gp_Ax2(gp_Pnt(*basePointVector.toTuple()), mirrorPlaneNormalVector))
-
-        return self._apply_transform(T)
-
     @staticmethod
     def _center_of_mass(shape: "Shape") -> Vector:
 
@@ -650,6 +543,7 @@ class Shape(object):
 
         return Vector(Properties.CentreOfMass())
 
+    '''
     @staticmethod
     def matrixOfInertia(obj: "Shape") -> List[List[float]]:
         """
@@ -665,6 +559,7 @@ class Shape(object):
             return [[moi.Value(i, j) for j in range(1, 4)] for i in range(1, 4)]
 
         raise NotImplementedError
+    '''
 
     def Center(self) -> Vector:
         """
@@ -673,13 +568,7 @@ class Shape(object):
 
         return Shape.centerOfMass(self)
 
-    def CenterOfBoundBox(self, tolerance: Optional[float] = None) -> Vector:
-        """
-        :param tolerance: Tolerance passed to the :py:meth:`BoundingBox` method
-        :returns: Center of the bounding box of this shape
-        """
-        return self.BoundingBox(tolerance=tolerance).center
-
+    '''
     @staticmethod
     def CombinedCenter(objects: Iterable["Shape"]) -> Vector:
         """
@@ -713,7 +602,8 @@ class Shape(object):
             return Properties.Mass()
         else:
             raise NotImplementedError
-
+    '''
+    
     @staticmethod
     def centerOfMass(obj: "Shape") -> Vector:
         """
@@ -729,25 +619,6 @@ class Shape(object):
             return Vector(Properties.CentreOfMass())
         else:
             raise NotImplementedError
-
-    @staticmethod
-    def CombinedCenterOfBoundBox(objects: List["Shape"]) -> Vector:
-        """
-        Calculates the center of a bounding box of multiple objects.
-
-        :param objects: A list of objects
-        """
-        total_mass = len(objects)
-
-        weighted_centers = []
-        for o in objects:
-            weighted_centers.append(BoundBox._fromTopoDS(o.wrapped).center)
-
-        sum_wc = weighted_centers[0]
-        for wc in weighted_centers[1:]:
-            sum_wc = sum_wc.add(wc)
-
-        return Vector(sum_wc.multiply(1.0 / total_mass))
 
     def Closed(self) -> bool:
         """
@@ -909,6 +780,7 @@ class Shape(object):
 
         return self._filter(selector, map(Shape.cast, self._entities("Solid")))
 
+    '''
     def Area(self) -> float:
         """
         :returns: The surface area of all faces in this Shape
@@ -924,61 +796,13 @@ class Shape(object):
         """
         # when density == 1, mass == volume
         return Shape.computeMass(self)
+    '''
 
     def _apply_transform(self: T, Tr: gp_Trsf) -> T:
 
         return self.__class__(BRepBuilderAPI_Transform(self.wrapped, Tr, True).Shape())
 
-    def rotate(
-        self: T, startVector: VectorLike, endVector: VectorLike, angleDegrees: float
-    ) -> T:
-        """
-        Rotates a shape around an axis.
-
-        :param startVector: start point of rotation axis
-        :type startVector: either a 3-tuple or a Vector
-        :param endVector: end point of rotation axis
-        :type endVector: either a 3-tuple or a Vector
-        :param angleDegrees:  angle to rotate, in degrees
-        :returns: a copy of the shape, rotated
-        """
-        if type(startVector) == tuple:
-            startVector = Vector(startVector)
-
-        if type(endVector) == tuple:
-            endVector = Vector(endVector)
-
-        Tr = gp_Trsf()
-        Tr.SetRotation(
-            gp_Ax1(
-                Vector(startVector).toPnt(),
-                (Vector(endVector) - Vector(startVector)).toDir(),
-            ),
-            radians(angleDegrees),
-        )
-
-        return self._apply_transform(Tr)
-
-    def translate(self: T, vector: VectorLike) -> T:
-        """
-        Translates this shape through a transformation.
-        """
-
-        T = gp_Trsf()
-        T.SetTranslation(Vector(vector).wrapped)
-
-        return self._apply_transform(T)
-
-    def scale(self, factor: float) -> "Shape":
-        """
-        Scales this shape through a transformation.
-        """
-
-        T = gp_Trsf()
-        T.SetScale(gp_Pnt(), factor)
-
-        return self._apply_transform(T)
-
+    '''
     def copy(self: T, mesh: bool = False) -> T:
         """
         Creates a new object that is a copy of this object.
@@ -988,6 +812,7 @@ class Shape(object):
         """
 
         return self.__class__(BRepBuilderAPI_Copy(self.wrapped, True, mesh).Shape())
+    '''
 
     def transformShape(self, tMatrix: Matrix) -> "Shape":
         """
@@ -1325,91 +1150,6 @@ class Shape(object):
 
         return vertices, triangles
 
-    def toSplines(
-        self: T, degree: int = 3, tolerance: float = 1e-3, nurbs: bool = False
-    ) -> T:
-        """
-        Approximate shape with b-splines of the specified degree.
-
-        :param degree: Maximum degree.
-        :param tolerance: Approximation tolerance.
-        :param nurbs: Use rational splines.
-        """
-
-        params = ShapeCustom_RestrictionParameters()
-
-        result = ShapeCustom.BSplineRestriction_s(
-            self.wrapped,
-            tolerance,  # 3D tolerance
-            tolerance,  # 2D tolerance
-            degree,
-            1,  # dumy value, degree is leading
-            ga.GeomAbs_C0,
-            ga.GeomAbs_C0,
-            True,  # set degree to be leading
-            not nurbs,
-            params,
-        )
-
-        return self.__class__(result)
-
-    def toVtkPolyData(
-        self,
-        tolerance: Optional[float] = None,
-        angularTolerance: Optional[float] = None,
-        normals: bool = False,
-    ) -> vtkPolyData:
-        """
-        Convert shape to vtkPolyData
-        """
-
-        vtk_shape = IVtkOCC_Shape(self.wrapped)
-        shape_data = IVtkVTK_ShapeData()
-        shape_mesher = IVtkOCC_ShapeMesher()
-
-        drawer = vtk_shape.Attributes()
-        drawer.SetUIsoAspect(Prs3d_IsoAspect(Quantity_Color(), Aspect_TOL_SOLID, 1, 0))
-        drawer.SetVIsoAspect(Prs3d_IsoAspect(Quantity_Color(), Aspect_TOL_SOLID, 1, 0))
-
-        if tolerance:
-            drawer.SetDeviationCoefficient(tolerance)
-
-        if angularTolerance:
-            drawer.SetDeviationAngle(angularTolerance)
-
-        shape_mesher.Build(vtk_shape, shape_data)
-
-        rv = shape_data.getVtkPolyData()
-
-        # convert to triangles and split edges
-        t_filter = vtkTriangleFilter()
-        t_filter.SetInputData(rv)
-        t_filter.Update()
-
-        rv = t_filter.GetOutput()
-
-        # compute normals
-        if normals:
-            n_filter = vtkPolyDataNormals()
-            n_filter.SetComputePointNormals(True)
-            n_filter.SetComputeCellNormals(True)
-            n_filter.SetFeatureAngle(360)
-            n_filter.SetInputData(rv)
-            n_filter.Update()
-
-            rv = n_filter.GetOutput()
-
-        return rv
-
-    def _repr_javascript_(self):
-        """
-        Jupyter 3D representation support
-        """
-
-        from .jupyter_tools import display
-
-        return display(self)._repr_javascript_()
-
     def __iter__(self) -> Iterator["Shape"]:
         """
         Iterate over subshapes.
@@ -1421,55 +1161,6 @@ class Shape(object):
         while it.More():
             yield Shape.cast(it.Value())
             it.Next()
-
-    def ancestors(self, shape: "Shape", kind: Shapes) -> "Compound":
-        """
-        Iterate over ancestors, i.e. shapes of same kind within shape that contain self.
-
-        """
-
-        shape_map = TopTools_IndexedDataMapOfShapeListOfShape()
-
-        TopExp.MapShapesAndAncestors_s(
-            shape.wrapped, shapetype(self.wrapped), inverse_shape_LUT[kind], shape_map
-        )
-
-        return Compound.makeCompound(
-            Shape.cast(s) for s in shape_map.FindFromKey(self.wrapped)
-        )
-
-    def siblings(self, shape: "Shape", kind: Shapes, level: int = 1) -> "Compound":
-        """
-        Iterate over siblings, i.e. shapes within shape that share subshapes of kind with self.
-
-        """
-
-        shape_map = TopTools_IndexedDataMapOfShapeListOfShape()
-        TopExp.MapShapesAndAncestors_s(
-            shape.wrapped, inverse_shape_LUT[kind], shapetype(self.wrapped), shape_map,
-        )
-        exclude = TopTools_MapOfShape()
-
-        def _siblings(shapes, level):
-
-            rv = set()
-
-            for s in shapes:
-                exclude.Add(s.wrapped)
-
-            for s in shapes:
-
-                rv.update(
-                    Shape.cast(el)
-                    for child in s._entities(kind)
-                    for el in shape_map.FindFromKey(child)
-                    if not exclude.Contains(el)
-                )
-
-            return rv if level == 1 else _siblings(rv, level - 1)
-
-        return Compound.makeCompound(_siblings([self], level))
-
 
 class ShapeProtocol(Protocol):
     @property
@@ -3645,78 +3336,6 @@ class Compound(Shape, Mixin3D):
 
         return cls(cls._makeCompound((s.wrapped for s in listOfShapes)))
 
-    @classmethod
-    def makeText(
-        cls,
-        text: str,
-        size: float,
-        height: float,
-        font: str = "Arial",
-        fontPath: Optional[str] = None,
-        kind: Literal["regular", "bold", "italic"] = "regular",
-        halign: Literal["center", "left", "right"] = "center",
-        valign: Literal["center", "top", "bottom"] = "center",
-        position: Plane = Plane.XY(),
-    ) -> "Shape":
-        """
-        Create a 3D text
-        """
-
-        font_kind = {
-            "regular": Font_FA_Regular,
-            "bold": Font_FA_Bold,
-            "italic": Font_FA_Italic,
-        }[kind]
-
-        mgr = Font_FontMgr.GetInstance_s()
-
-        if fontPath and mgr.CheckFont(TCollection_AsciiString(fontPath).ToCString()):
-            font_t = Font_SystemFont(TCollection_AsciiString(fontPath))
-            font_t.SetFontPath(font_kind, TCollection_AsciiString(fontPath))
-            mgr.RegisterFont(font_t, True)
-
-        else:
-            font_t = mgr.FindFont(TCollection_AsciiString(font), font_kind)
-
-        builder = Font_BRepTextBuilder()
-        font_i = StdPrs_BRepFont(
-            NCollection_Utf8String(font_t.FontName().ToCString()),
-            font_kind,
-            float(size),
-        )
-        if halign == "left":
-            theHAlign = Graphic3d_HTA_LEFT
-        elif halign == "center":
-            theHAlign = Graphic3d_HTA_CENTER
-        else:  # halign == "right"
-            theHAlign = Graphic3d_HTA_RIGHT
-
-        if valign == "bottom":
-            theVAlign = Graphic3d_VTA_BOTTOM
-        elif valign == "center":
-            theVAlign = Graphic3d_VTA_CENTER
-        else:  # valign == "top":
-            theVAlign = Graphic3d_VTA_TOP
-
-        text_flat = Shape(
-            builder.Perform(
-                font_i,
-                NCollection_Utf8String(text),
-                theHAlign=theHAlign,
-                theVAlign=theVAlign,
-            )
-        )
-
-        if height != 0:
-            vecNormal = text_flat.Faces()[0].normalAt() * height
-
-            text_3d = BRepPrimAPI_MakePrism(text_flat.wrapped, vecNormal.wrapped)
-            rv = cls(text_3d.Shape()).transformShape(position.rG)
-        else:
-            rv = text_flat.transformShape(position.rG)
-
-        return rv
-
     def __bool__(self) -> bool:
         """
         Check if empty.
@@ -3778,60 +3397,6 @@ class Compound(Shape, Mixin3D):
             intersect_op.SetFuzzyValue(tol)
 
         return tcast(Compound, self._bool_op(self, toIntersect, intersect_op))
-
-    def ancestors(self, shape: "Shape", kind: Shapes) -> "Compound":
-        """
-        Iterate over ancestors, i.e. shapes of same kind within shape that contain elements of self.
-
-        """
-
-        shape_map = TopTools_IndexedDataMapOfShapeListOfShape()
-        shapetypes = set(shapetype(ch.wrapped) for ch in self)
-
-        for t in shapetypes:
-            TopExp.MapShapesAndAncestors_s(
-                shape.wrapped, t, inverse_shape_LUT[kind], shape_map
-            )
-
-        return Compound.makeCompound(
-            Shape.cast(a) for s in self for a in shape_map.FindFromKey(s.wrapped)
-        )
-
-    def siblings(self, shape: "Shape", kind: Shapes, level: int = 1) -> "Compound":
-        """
-        Iterate over siblings, i.e. shapes within shape that share subshapes of kind with the elements of self.
-
-        """
-
-        shape_map = TopTools_IndexedDataMapOfShapeListOfShape()
-        shapetypes = set(shapetype(ch.wrapped) for ch in self)
-
-        for t in shapetypes:
-            TopExp.MapShapesAndAncestors_s(
-                shape.wrapped, inverse_shape_LUT[kind], t, shape_map,
-            )
-
-        exclude = TopTools_MapOfShape()
-
-        def _siblings(shapes, level):
-
-            rv = set()
-
-            for s in shapes:
-                exclude.Add(s.wrapped)
-
-            for s in shapes:
-                rv.update(
-                    Shape.cast(el)
-                    for child in s._entities(kind)
-                    for el in shape_map.FindFromKey(child)
-                    if not exclude.Contains(el)
-                )
-
-            return rv if level == 1 else _siblings(rv, level - 1)
-
-        return Compound.makeCompound(_siblings(self, level))
-
 
 def sortWiresByBuildOrder(wireList: List[Wire]) -> List[List[Wire]]:
     """Tries to determine how wires should be combined into faces.

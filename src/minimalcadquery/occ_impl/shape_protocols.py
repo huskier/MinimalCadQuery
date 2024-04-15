@@ -1,7 +1,7 @@
 from typing import Optional, Literal, Sequence
 from typing_extensions import Protocol, Self
 
-from .geom import Vector, BoundBox
+from .geom import Vector #, BoundBox
 
 import OCP.GeomAbs as ga
 
@@ -73,8 +73,10 @@ class ShapeProtocol(Protocol):
     def Area(self) -> float:
         ...
 
+    '''
     def BoundingBox(self, tolerance: Optional[float] = None) -> BoundBox:
         ...
+    '''
 
 
 class Shape1DProtocol(ShapeProtocol, Protocol):

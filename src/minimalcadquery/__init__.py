@@ -7,7 +7,7 @@ except PackageNotFoundError:
     __version__ = "2.5-dev"
 
 # these items point to the OCC implementation
-from .occ_impl.geom import Plane, BoundBox, Vector, Matrix, Location
+from .occ_impl.geom import Plane, Vector, Matrix, Location
 from .occ_impl.shapes import (
     Shape,
     Vertex,
@@ -26,12 +26,6 @@ from .occ_impl import importers
 
 # the order of these matter
 from .selectors import (
-    NearestToPointSelector,
-    ParallelDirSelector,
-    DirectionSelector,
-    PerpendicularDirSelector,
-    TypeSelector,
-    DirectionMinMaxSelector,
     StringSyntaxSelector,
     Selector,
 )
@@ -45,13 +39,9 @@ from . import plugins
 __all__ = [
     "CQ",
     "Workplane",
-#    "Assembly",
-#    "Color",
-#    "Constraint",
     "plugins",
     "selectors",
     "Plane",
-    "BoundBox",
     "Matrix",
     "Vector",
     "Location",
@@ -66,14 +56,7 @@ __all__ = [
     "Compound",
     "exporters",
     "importers",
-    "NearestToPointSelector",
-    "ParallelDirSelector",
-    "DirectionSelector",
-    "PerpendicularDirSelector",
-    "TypeSelector",
-    "DirectionMinMaxSelector",
     "StringSyntaxSelector",
     "Selector",
     "plugins",
-    #"Sketch",
 ]
