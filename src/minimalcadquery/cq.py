@@ -401,44 +401,6 @@ class Workplane(object):
         """
         self.ctx.pendingWires.append(wire)
 
-    '''
-    def _consolidateWires(self) -> List[Wire]:
-
-        # note: do not use CQContext.popPendingEdges or Wires here, this method does not
-        # clear pending edges or wires.
-        wires = cast(
-            List[Union[Edge, Wire]],
-            [el for el in chain(self.ctx.pendingEdges, self.ctx.pendingWires)],
-        )
-        if not wires:
-            return []
-
-        return Wire.combine(wires)
-
-    def consolidateWires(self: T) -> T:
-        """
-        Attempt to consolidate wires on the stack into a single.
-        If possible, a new object with the results are returned.
-        if not possible, the wires remain separated
-        """
-
-        w = self._consolidateWires()
-
-        if not w:
-            return self
-
-        # ok this is a little tricky. if we consolidate wires, we have to actually
-        # modify the pendingWires collection to remove the original ones, and replace them
-        # with the consolidate done
-        # since we are already assuming that all wires could be consolidated, its easy, we just
-        # clear the pending wire list
-        r = self.newObject(w)
-        r.ctx.pendingWires = w
-        r.ctx.pendingEdges = []
-
-        return r
-    '''
-
     def wire(self: T, forConstruction: bool = False) -> T:
         """
         Returns a CQ object with all pending edges connected into a wire.

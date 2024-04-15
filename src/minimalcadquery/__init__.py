@@ -33,7 +33,7 @@ from .selectors import (
 from .cq import CQ, Workplane
 #from .assembly import Assembly, Color, Constraint
 from . import selectors
-from . import plugins
+#from . import plugins
 
 
 __all__ = [
@@ -58,5 +58,5 @@ __all__ = [
     "importers",
     "StringSyntaxSelector",
     "Selector",
-    "plugins",
+#    "plugins",
 ]

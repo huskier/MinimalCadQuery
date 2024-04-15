@@ -16,8 +16,8 @@ from typing_extensions import Literal, Protocol
 
 from io import BytesIO
 
-from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkFiltersCore import vtkTriangleFilter, vtkPolyDataNormals
+#from vtkmodules.vtkCommonDataModel import vtkPolyData
+#from vtkmodules.vtkFiltersCore import vtkTriangleFilter, vtkPolyDataNormals
 
 from .geom import Vector, VectorLike, Plane, Location, Matrix
 from .shape_protocols import geom_LUT_FACE, geom_LUT_EDGE, Shapes, Geoms
@@ -26,8 +26,6 @@ from ..selectors import (
     Selector,
     StringSyntaxSelector,
 )
-
-#from ..utils import cqmultimethod as multimethod
 
 # change default OCCT logging level
 from OCP.Message import Message, Message_Gravity
@@ -543,67 +541,13 @@ class Shape(object):
 
         return Vector(Properties.CentreOfMass())
 
-    '''
-    @staticmethod
-    def matrixOfInertia(obj: "Shape") -> List[List[float]]:
-        """
-        Calculates the matrix of inertia of an object.
-        :param obj: Compute the matrix of inertia of this object
-        """
-        Properties = GProp_GProps()
-        calc_function = shape_properties_LUT[shapetype(obj.wrapped)]
-
-        if calc_function:
-            calc_function(obj.wrapped, Properties)
-            moi = Properties.MatrixOfInertia()
-            return [[moi.Value(i, j) for j in range(1, 4)] for i in range(1, 4)]
-
-        raise NotImplementedError
-    '''
-
     def Center(self) -> Vector:
         """
         :returns: The point of the center of mass of this Shape
         """
 
         return Shape.centerOfMass(self)
-
-    '''
-    @staticmethod
-    def CombinedCenter(objects: Iterable["Shape"]) -> Vector:
-        """
-        Calculates the center of mass of multiple objects.
-
-        :param objects: A list of objects with mass
-        """
-        total_mass = sum(Shape.computeMass(o) for o in objects)
-        weighted_centers = [
-            Shape.centerOfMass(o).multiply(Shape.computeMass(o)) for o in objects
-        ]
-
-        sum_wc = weighted_centers[0]
-        for wc in weighted_centers[1:]:
-            sum_wc = sum_wc.add(wc)
-
-        return Vector(sum_wc.multiply(1.0 / total_mass))
-
-    @staticmethod
-    def computeMass(obj: "Shape") -> float:
-        """
-        Calculates the 'mass' of an object.
-
-        :param obj: Compute the mass of this object
-        """
-        Properties = GProp_GProps()
-        calc_function = shape_properties_LUT[shapetype(obj.wrapped)]
-
-        if calc_function:
-            calc_function(obj.wrapped, Properties)
-            return Properties.Mass()
-        else:
-            raise NotImplementedError
-    '''
-    
+  
     @staticmethod
     def centerOfMass(obj: "Shape") -> Vector:
         """
@@ -780,39 +724,9 @@ class Shape(object):
 
         return self._filter(selector, map(Shape.cast, self._entities("Solid")))
 
-    '''
-    def Area(self) -> float:
-        """
-        :returns: The surface area of all faces in this Shape
-        """
-        Properties = GProp_GProps()
-        BRepGProp.SurfaceProperties_s(self.wrapped, Properties)
-
-        return Properties.Mass()
-
-    def Volume(self) -> float:
-        """
-        :returns: The volume of this Shape
-        """
-        # when density == 1, mass == volume
-        return Shape.computeMass(self)
-    '''
-
     def _apply_transform(self: T, Tr: gp_Trsf) -> T:
 
         return self.__class__(BRepBuilderAPI_Transform(self.wrapped, Tr, True).Shape())
-
-    '''
-    def copy(self: T, mesh: bool = False) -> T:
-        """
-        Creates a new object that is a copy of this object.
-
-        :param mesh: should I copy the triangulation too (default: False)
-        :returns: a copy of the object
-        """
-
-        return self.__class__(BRepBuilderAPI_Copy(self.wrapped, True, mesh).Shape())
-    '''
 
     def transformShape(self, tMatrix: Matrix) -> "Shape":
         """
