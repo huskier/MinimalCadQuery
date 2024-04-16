@@ -21,7 +21,9 @@ from OCP.BRepMesh import BRepMesh_IncrementalMesh
 from OCP.TopoDS import TopoDS_Shape
 from OCP.TopLoc import TopLoc_Location
 
-from ..types import Real
+#from ..types import Real
+
+Real = (float | int)
 
 TOL = 1e-2
 
