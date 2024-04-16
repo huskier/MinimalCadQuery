@@ -25,7 +25,8 @@ from ..types import Real
 
 TOL = 1e-2
 
-VectorLike = Union["Vector", Tuple[Real, Real], Tuple[Real, Real, Real]]
+#VectorLike = Union["Vector", Tuple[Real, Real], Tuple[Real, Real, Real]]
+VectorLike = ("Vector" | Tuple[Real, Real] | Tuple[Real, Real, Real])
 
 
 class Vector(object):
@@ -175,59 +176,6 @@ class Vector(object):
         stack.
         """
         return self
-
-    def getAngle(self, v: "Vector") -> float:
-        return self.wrapped.Angle(v.wrapped)
-
-    def getSignedAngle(self, v: "Vector") -> float:
-        return self.wrapped.AngleWithRef(v.wrapped, gp_Vec(0, 0, -1))
-
-    def distanceToLine(self):
-        raise NotImplementedError("Have not needed this yet, but OCCT supports it!")
-
-    def projectToLine(self, line: "Vector") -> "Vector":
-        """
-        Returns a new vector equal to the projection of this Vector onto the line
-        represented by Vector <line>
-
-        :param args: Vector
-
-        Returns the projected vector.
-        """
-        lineLength = line.Length
-
-        return line * (self.dot(line) / (lineLength * lineLength))
-
-    def distanceToPlane(self):
-        raise NotImplementedError("Have not needed this yet, but OCCT supports it!")
-
-    def projectToPlane(self, plane: "Plane") -> "Vector":
-        """
-        Vector is projected onto the plane provided as input.
-
-        :param args: Plane object
-
-        Returns the projected vector.
-        """
-        base = plane.origin
-        normal = plane.zDir
-
-        return self - normal * (((self - base).dot(normal)) / normal.Length ** 2)
-
-    def __neg__(self) -> "Vector":
-        return self * -1
-
-    def __abs__(self) -> float:
-        return self.Length
-
-    def __repr__(self) -> str:
-        return "Vector: " + str((self.x, self.y, self.z))
-
-    def __str__(self) -> str:
-        return "Vector: " + str((self.x, self.y, self.z))
-
-    def __eq__(self, other: "Vector") -> bool:  # type: ignore[override]
-        return self.wrapped.IsEqual(other.wrapped, 0.00001, 0.00001)
 
     def toPnt(self) -> gp_Pnt:
 
@@ -497,112 +445,6 @@ class Plane(object):
         """
         self.origin = self.toWorldCoords((x, y))
 
-    def toLocalCoords(self, obj):
-        """Project the provided coordinates onto this plane
-
-        :param obj: an object or vector to convert
-        :type vector: a vector or shape
-        :return: an object of the same type, but converted to local coordinates
-
-
-        Most of the time, the z-coordinate returned will be zero, because most
-        operations based on a plane are all 2D. Occasionally, though, 3D
-        points outside of the current plane are transformed. One such example is
-        :py:meth:`Workplane.box`, where 3D corners of a box are transformed to
-        orient the box in space correctly.
-
-        """
-        from .shapes import Shape
-
-        if isinstance(obj, Vector):
-            return obj.transform(self.fG)
-        elif isinstance(obj, Shape):
-            return obj.transformShape(self.fG)
-        else:
-            raise ValueError(
-                "Don't know how to convert type {} to local coordinates".format(
-                    type(obj)
-                )
-            )
-
-    def toWorldCoords(self, tuplePoint) -> Vector:
-        """Convert a point in local coordinates to global coordinates
-
-        :param tuplePoint: point in local coordinates to convert.
-        :type tuplePoint: a 2 or three tuple of float. The third value is taken to be zero if not supplied.
-        :return: a Vector in global coordinates
-        """
-        if isinstance(tuplePoint, Vector):
-            v = tuplePoint
-        elif len(tuplePoint) == 2:
-            v = Vector(tuplePoint[0], tuplePoint[1], 0)
-        else:
-            v = Vector(tuplePoint)
-        return v.transform(self.rG)
-
-    def rotated(self, rotate=(0, 0, 0)):
-        """Returns a copy of this plane, rotated about the specified axes
-
-        Since the z axis is always normal the plane, rotating around Z will
-        always produce a plane that is parallel to this one.
-
-        The origin of the workplane is unaffected by the rotation.
-
-        Rotations are done in order x, y, z. If you need a different order,
-        manually chain together multiple rotate() commands.
-
-        :param rotate: Vector [xDegrees, yDegrees, zDegrees]
-        :return: a copy of this plane rotated as requested.
-        """
-        # NB: this is not a geometric Vector
-        rotate = Vector(rotate)
-        # Convert to radians.
-        rotate = rotate.multiply(math.pi / 180.0)
-
-        # Compute rotation matrix.
-        T1 = gp_Trsf()
-        T1.SetRotation(
-            gp_Ax1(gp_Pnt(*(0, 0, 0)), gp_Dir(*self.xDir.toTuple())), rotate.x
-        )
-        T2 = gp_Trsf()
-        T2.SetRotation(
-            gp_Ax1(gp_Pnt(*(0, 0, 0)), gp_Dir(*self.yDir.toTuple())), rotate.y
-        )
-        T3 = gp_Trsf()
-        T3.SetRotation(
-            gp_Ax1(gp_Pnt(*(0, 0, 0)), gp_Dir(*self.zDir.toTuple())), rotate.z
-        )
-        T = Matrix(gp_GTrsf(T1 * T2 * T3))
-
-        # Compute the new plane.
-        newXdir = self.xDir.transform(T)
-        newZdir = self.zDir.transform(T)
-
-        return Plane(self.origin, newXdir, newZdir)
-
-    def mirrorInPlane(self, listOfShapes, axis="X"):
-
-        local_coord_system = gp_Ax3(
-            self.origin.toPnt(), self.zDir.toDir(), self.xDir.toDir()
-        )
-        T = gp_Trsf()
-
-        if axis == "X":
-            T.SetMirror(gp_Ax1(self.origin.toPnt(), local_coord_system.XDirection()))
-        elif axis == "Y":
-            T.SetMirror(gp_Ax1(self.origin.toPnt(), local_coord_system.YDirection()))
-        else:
-            raise NotImplementedError
-
-        resultWires = []
-        for w in listOfShapes:
-            mirrored = w.transformShape(Matrix(T))
-
-            # attempt stitching of the wires
-            resultWires.append(mirrored)
-
-        return resultWires
-
     def _setPlaneDir(self, xDir):
         """Set the vectors parallel to the plane, i.e. xDir and yDir"""
         xDir = Vector(xDir)
@@ -641,16 +483,12 @@ class Plane(object):
         self.lcs = local_coord_system
         self.rG = inverse
         self.fG = forward
-
+    
     @property
     def location(self) -> "Location":
 
         return Location(self)
-
-    def toPln(self) -> gp_Pln:
-
-        return gp_Pln(gp_Ax3(self.origin.toPnt(), self.zDir.toDir(), self.xDir.toDir()))
-
+    
 class Location(object):
     """Location in 3D space. Depending on usage can be absolute or relative.
 
@@ -659,9 +497,6 @@ class Location(object):
     in CQ.
     """
 
-    pass
-
-    
     wrapped: TopLoc_Location
 
     @overload

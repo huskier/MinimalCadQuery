@@ -21,7 +21,7 @@ def toCompound(shape: Workplane) -> Compound:
     return Compound.makeCompound(val for val in shape.vals() if isinstance(val, Shape))
 
 def export(
-    w: Union[Shape, Workplane],
+    w: (Shape | Workplane),
     fname: str,
     exportType: Optional[ExportLiterals] = None,
     tolerance: float = 0.1,
@@ -64,17 +64,9 @@ def export(
     else:
         raise ValueError("Unknown export type")
 
-
-#@deprecate()
-def toString(shape, exportType, tolerance=0.1, angularTolerance=0.05):
-    s = StringIO.StringIO()
-    exportShape(shape, exportType, s, tolerance, angularTolerance)
-    return s.getvalue()
-
-
 #@deprecate()
 def exportShape(
-    w: Union[Shape, Workplane],
+    w: (Shape | Workplane),
     exportType: ExportLiterals,
     fileLike: IO,
     tolerance: float = 0.1,

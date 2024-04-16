@@ -85,7 +85,6 @@ class Shape1DProtocol(ShapeProtocol, Protocol):
     def Length(self) -> float:
         ...
 
-
 class FaceProtocol(ShapeProtocol, Protocol):
     def normalAt(self, v: Optional[Vector] = None) -> Vector:
         ...

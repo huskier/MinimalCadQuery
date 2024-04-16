@@ -265,8 +265,7 @@ import warnings
 
 from multimethod import multimethod, DispatchError
 
-
-Real = Union[float, int]
+Real = (float | int)
 
 TOLERANCE = 1e-6
 HASH_CODE_MAX = 2147483647  # max 32bit signed int, required by OCC.Core.HashCode
@@ -353,7 +352,7 @@ def downcast(obj: TopoDS_Shape) -> TopoDS_Shape:
 
     return rv
 
-
+'''
 def fix(obj: TopoDS_Shape) -> TopoDS_Shape:
     """
     Fix a TopoDS object to suitable specialized type
@@ -363,7 +362,7 @@ def fix(obj: TopoDS_Shape) -> TopoDS_Shape:
     sf.Perform()
 
     return downcast(sf.Shape())
-
+'''
 
 class Shape(object):
     """
@@ -388,15 +387,6 @@ class Shape(object):
         upgrader.Build()
 
         return self.__class__(upgrader.Shape())
-
-    def fix(self: T) -> T:
-        """Try to fix shape if not valid"""
-        if not self.isValid():
-            fixed = fix(self.wrapped)
-
-            return self.__class__(fixed)
-
-        return self
 
     @classmethod
     def cast(cls, obj: TopoDS_Shape, forConstruction: bool = False) -> "Shape":
@@ -507,22 +497,6 @@ class Shape(object):
         """
         return self.wrapped.IsSame(other.wrapped)
 
-    def isEqual(self, other: "Shape") -> bool:
-        """
-        Returns True if two shapes are equal, i.e. if they share the same
-        TShape with the same Locations and Orientations. Also see
-        :py:meth:`isSame`.
-        """
-        return self.wrapped.IsEqual(other.wrapped)
-
-    def isValid(self) -> bool:
-        """
-        Returns True if no defect is detected on the shape S or any of its
-        subshapes. See the OCCT docs on BRepCheck_Analyzer::IsValid for a full
-        description of what is checked.
-        """
-        return BRepCheck_Analyzer(self.wrapped).IsValid()
-
     @staticmethod
     def _center_of_mass(shape: "Shape") -> Vector:
 
@@ -553,12 +527,6 @@ class Shape(object):
             return Vector(Properties.CentreOfMass())
         else:
             raise NotImplementedError
-
-    def Closed(self) -> bool:
-        """
-        :returns: The closedness flag
-        """
-        return self.wrapped.Closed()
 
     def ShapeType(self) -> Shapes:
         return tcast(Shapes, shape_LUT[shapetype(self.wrapped)])
@@ -591,66 +559,13 @@ class Shape(object):
 
         return out
 
-    def Vertices(self) -> List["Vertex"]:
-        """
-        :returns: All the vertices in this Shape
-        """
-
-        return [Vertex(i) for i in self._entities("Vertex")]
-
-    def Edges(self) -> List["Edge"]:
-        """
-        :returns: All the edges in this Shape
-        """
-
-        return [
-            Edge(i)
-            for i in self._entities("Edge")
-            if not BRep_Tool.Degenerated_s(TopoDS.Edge_s(i))
-        ]
-
-    def Compounds(self) -> List["Compound"]:
-        """
-        :returns: All the compounds in this Shape
-        """
-
-        return [Compound(i) for i in self._entities("Compound")]
-
-    def Wires(self) -> List["Wire"]:
-        """
-        :returns: All the wires in this Shape
-        """
-
-        return [Wire(i) for i in self._entities("Wire")]
-
     def Faces(self) -> List["Face"]:
         """
         :returns: All the faces in this Shape
         """
 
         return [Face(i) for i in self._entities("Face")]
-
-    def Shells(self) -> List["Shell"]:
-        """
-        :returns: All the shells in this Shape
-        """
-
-        return [Shell(i) for i in self._entities("Shell")]
-
-    def Solids(self) -> List["Solid"]:
-        """
-        :returns: All the solids in this Shape
-        """
-
-        return [Solid(i) for i in self._entities("Solid")]
-
-    def CompSolids(self) -> List["CompSolid"]:
-        """
-        :returns: All the compsolids in this Shape
-        """
-
-        return [CompSolid(i) for i in self._entities("CompSolid")]
-
+    
     def _filter(
         self, selector: Optional[Union[Selector, str]], objs: Iterable["Shape"]
     ) -> "Shape":
@@ -671,117 +586,6 @@ class Shape(object):
             rv = Compound.makeCompound(selected)
 
         return rv
-
-    def vertices(self, selector: Optional[Union[Selector, str]] = None) -> "Shape":
-        """
-        Select vertices.
-        """
-
-        return self._filter(selector, map(Shape.cast, self._entities("Vertex")))
-
-    def edges(self, selector: Optional[Union[Selector, str]] = None) -> "Shape":
-        """
-        Select edges.
-        """
-
-        return self._filter(selector, map(Shape.cast, self._entities("Edge")))
-
-    def wires(self, selector: Optional[Union[Selector, str]] = None) -> "Shape":
-        """
-        Select wires.
-        """
-
-        return self._filter(selector, map(Shape.cast, self._entities("Wire")))
-
-    def faces(self, selector: Optional[Union[Selector, str]] = None) -> "Shape":
-        """
-        Select faces.
-        """
-
-        return self._filter(selector, map(Shape.cast, self._entities("Face")))
-
-    def shells(self, selector: Optional[Union[Selector, str]] = None) -> "Shape":
-        """
-        Select shells.
-        """
-
-        return self._filter(selector, map(Shape.cast, self._entities("Shell")))
-
-    def solids(self, selector: Optional[Union[Selector, str]] = None) -> "Shape":
-        """
-        Select solids.
-        """
-
-        return self._filter(selector, map(Shape.cast, self._entities("Solid")))
-
-    def _apply_transform(self: T, Tr: gp_Trsf) -> T:
-
-        return self.__class__(BRepBuilderAPI_Transform(self.wrapped, Tr, True).Shape())
-
-    def transformShape(self, tMatrix: Matrix) -> "Shape":
-        """
-        Transforms this Shape by tMatrix. Also see :py:meth:`transformGeometry`.
-
-        :param tMatrix: The transformation matrix
-        :returns: a copy of the object, transformed by the provided matrix,
-            with all objects keeping their type
-        """
-
-        r = Shape.cast(
-            BRepBuilderAPI_Transform(self.wrapped, tMatrix.wrapped.Trsf()).Shape()
-        )
-        r.forConstruction = self.forConstruction
-
-        return r
-
-    def transformGeometry(self, tMatrix: Matrix) -> "Shape":
-        """
-        Transforms this shape by tMatrix.
-
-        WARNING: transformGeometry will sometimes convert lines and circles to
-        splines, but it also has the ability to handle skew and stretching
-        transformations.
-
-        If your transformation is only translation and rotation, it is safer to
-        use :py:meth:`transformShape`, which doesn't change the underlying type
-        of the geometry, but cannot handle skew transformations.
-
-        :param tMatrix: The transformation matrix
-        :returns: a copy of the object, but with geometry transformed instead
-            of just rotated.
-        """
-        r = Shape.cast(
-            BRepBuilderAPI_GTransform(self.wrapped, tMatrix.wrapped, True).Shape()
-        )
-        r.forConstruction = self.forConstruction
-
-        return r
-
-    def location(self) -> Location:
-        """
-        Return the current location
-        """
-
-        return Location(self.wrapped.Location())
-
-    def locate(self: T, loc: Location) -> T:
-        """
-        Apply a location in absolute sense to self
-        """
-
-        self.wrapped.Location(loc.wrapped)
-
-        return self
-
-    def located(self: T, loc: Location) -> T:
-        """
-        Apply a location in absolute sense to a copy of self
-        """
-
-        r = self.__class__(self.wrapped.Located(loc.wrapped))
-        r.forConstruction = self.forConstruction
-
-        return r
 
     def move(self: T, loc: Location) -> T:
         """
@@ -962,93 +766,6 @@ class Shape(object):
         faces = [face[0] for face in faces_dist]
 
         return [Face(face) for face in faces]
-
-    def split(self, *splitters: "Shape") -> "Shape":
-        """
-        Split this shape with the positional arguments.
-        """
-
-        split_op = BRepAlgoAPI_Splitter()
-
-        return self._bool_op((self,), splitters, split_op)
-
-    def distance(self, other: "Shape") -> float:
-        """
-        Minimal distance between two shapes
-        """
-
-        return BRepExtrema_DistShapeShape(self.wrapped, other.wrapped).Value()
-
-    def distances(self, *others: "Shape") -> Iterator[float]:
-        """
-        Minimal distances to between self and other shapes
-        """
-
-        dist_calc = BRepExtrema_DistShapeShape()
-        dist_calc.LoadS1(self.wrapped)
-
-        for s in others:
-            dist_calc.LoadS2(s.wrapped)
-            dist_calc.Perform()
-
-            yield dist_calc.Value()
-
-    def mesh(self, tolerance: float, angularTolerance: float = 0.1):
-        """
-        Generate triangulation if none exists.
-        """
-
-        if not BRepTools.Triangulation_s(self.wrapped, tolerance):
-            BRepMesh_IncrementalMesh(self.wrapped, tolerance, True, angularTolerance)
-
-    def tessellate(
-        self, tolerance: float, angularTolerance: float = 0.1
-    ) -> Tuple[List[Vector], List[Tuple[int, int, int]]]:
-
-        self.mesh(tolerance, angularTolerance)
-
-        vertices: List[Vector] = []
-        triangles: List[Tuple[int, int, int]] = []
-        offset = 0
-
-        for f in self.Faces():
-
-            loc = TopLoc_Location()
-            poly = BRep_Tool.Triangulation_s(f.wrapped, loc)
-            Trsf = loc.Transformation()
-            reverse = (
-                True
-                if f.wrapped.Orientation() == TopAbs_Orientation.TopAbs_REVERSED
-                else False
-            )
-
-            # add vertices
-            vertices += [
-                Vector(v.X(), v.Y(), v.Z())
-                for v in (
-                    poly.Node(i).Transformed(Trsf) for i in range(1, poly.NbNodes() + 1)
-                )
-            ]
-
-            # add triangles
-            triangles += [
-                (
-                    t.Value(1) + offset - 1,
-                    t.Value(3) + offset - 1,
-                    t.Value(2) + offset - 1,
-                )
-                if reverse
-                else (
-                    t.Value(1) + offset - 1,
-                    t.Value(2) + offset - 1,
-                    t.Value(3) + offset - 1,
-                )
-                for t in poly.Triangles()
-            ]
-
-            offset += poly.NbNodes()
-
-        return vertices, triangles
 
     def __iter__(self) -> Iterator["Shape"]:
         """

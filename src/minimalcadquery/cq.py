@@ -475,8 +475,6 @@ class Workplane(object):
             for o in self.objects:
                 if isinstance(o, (Vector, Shape)):
                     pnts.append(loc.inverse * Location(plane, o.Center()))
-                #elif isinstance(o, Sketch):
-                #    pnts.append(loc.inverse * Location(plane, o._faces.Center()))
                 else:
                     pnts.append(o)
 
