@@ -34,10 +34,6 @@ def importShape(
     # Check to see what type of file we're working with
     if importType == ImportTypes.STEP:
         return importStep(fileName)
-    #elif importType == ImportTypes.DXF:
-    #    return importDXF(fileName, *args, **kwargs)
-    #elif importType == ImportTypes.BREP:
-    #    return importBrep(fileName)
     else:
         raise RuntimeError("Unsupported import type: {!r}".format(importType))
 

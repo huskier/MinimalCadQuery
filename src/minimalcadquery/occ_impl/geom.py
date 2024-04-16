@@ -245,7 +245,6 @@ class Vector(object):
 
         return Vector(gp_Vec(pnt_t.XYZ()))
 
-
 class Matrix:
     """A 3d , 4x4 transformation matrix.
 
@@ -264,131 +263,7 @@ class Matrix:
     since this is a transform matrix.
     """
 
-    wrapped: gp_GTrsf
-
-    @overload
-    def __init__(self) -> None:
-        ...
-
-    @overload
-    def __init__(self, matrix: Union[gp_GTrsf, gp_Trsf]) -> None:
-        ...
-
-    @overload
-    def __init__(self, matrix: Sequence[Sequence[float]]) -> None:
-        ...
-
-    def __init__(self, matrix=None):
-
-        if matrix is None:
-            self.wrapped = gp_GTrsf()
-        elif isinstance(matrix, gp_GTrsf):
-            self.wrapped = matrix
-        elif isinstance(matrix, gp_Trsf):
-            self.wrapped = gp_GTrsf(matrix)
-        elif isinstance(matrix, (list, tuple)):
-            # Validate matrix size & 4x4 last row value
-            valid_sizes = all(
-                (isinstance(row, (list, tuple)) and (len(row) == 4)) for row in matrix
-            ) and len(matrix) in (3, 4)
-            if not valid_sizes:
-                raise TypeError(
-                    "Matrix constructor requires 2d list of 4x3 or 4x4, but got: {!r}".format(
-                        matrix
-                    )
-                )
-            elif (len(matrix) == 4) and (tuple(matrix[3]) != (0, 0, 0, 1)):
-                raise ValueError(
-                    "Expected the last row to be [0,0,0,1], but got: {!r}".format(
-                        matrix[3]
-                    )
-                )
-
-            # Assign values to matrix
-            self.wrapped = gp_GTrsf()
-            [
-                self.wrapped.SetValue(i + 1, j + 1, e)
-                for i, row in enumerate(matrix[:3])
-                for j, e in enumerate(row)
-            ]
-
-        else:
-            raise TypeError("Invalid param to matrix constructor: {}".format(matrix))
-
-    def rotateX(self, angle: float):
-
-        self._rotate(gp.OX_s(), angle)
-
-    def rotateY(self, angle: float):
-
-        self._rotate(gp.OY_s(), angle)
-
-    def rotateZ(self, angle: float):
-
-        self._rotate(gp.OZ_s(), angle)
-
-    def _rotate(self, direction: gp_Ax1, angle: float):
-
-        new = gp_Trsf()
-        new.SetRotation(direction, angle)
-
-        self.wrapped = self.wrapped * gp_GTrsf(new)
-
-    def inverse(self) -> "Matrix":
-
-        return Matrix(self.wrapped.Inverted())
-
-    @overload
-    def multiply(self, other: Vector) -> Vector:
-        ...
-
-    @overload
-    def multiply(self, other: "Matrix") -> "Matrix":
-        ...
-
-    def multiply(self, other):
-
-        if isinstance(other, Vector):
-            return other.transform(self)
-
-        return Matrix(self.wrapped.Multiplied(other.wrapped))
-
-    def transposed_list(self) -> Sequence[float]:
-        """Needed by the cqparts gltf exporter"""
-
-        trsf = self.wrapped
-        data = [[trsf.Value(i, j) for j in range(1, 5)] for i in range(1, 4)] + [
-            [0.0, 0.0, 0.0, 1.0]
-        ]
-
-        return [data[j][i] for i in range(4) for j in range(4)]
-
-    def __getitem__(self, rc: Tuple[int, int]) -> float:
-        """Provide Matrix[r, c] syntax for accessing individual values. The row
-        and column parameters start at zero, which is consistent with most
-        python libraries, but is counter to gp_GTrsf(), which is 1-indexed.
-        """
-        if not isinstance(rc, tuple) or (len(rc) != 2):
-            raise IndexError("Matrix subscript must provide (row, column)")
-        (r, c) = rc
-        if (0 <= r <= 3) and (0 <= c <= 3):
-            if r < 3:
-                return self.wrapped.Value(r + 1, c + 1)
-            else:
-                # gp_GTrsf doesn't provide access to the 4th row because it has
-                # an implied value as below:
-                return [0.0, 0.0, 0.0, 1.0][c]
-        else:
-            raise IndexError("Out of bounds access into 4x4 matrix: {!r}".format(rc))
-
-    def __repr__(self) -> str:
-        """
-        Generate a valid python expression representing this Matrix
-        """
-        matrix_transposed = self.transposed_list()
-        matrix_str = ",\n        ".join(str(matrix_transposed[i::4]) for i in range(4))
-        return f"Matrix([{matrix_str}])"
-
+    pass
 
 class Plane(object):
     """A 2D coordinate system in space
@@ -784,6 +659,9 @@ class Location(object):
     in CQ.
     """
 
+    pass
+
+    
     wrapped: TopLoc_Location
 
     @overload
@@ -857,28 +735,3 @@ class Location(object):
             T.SetTranslationPart(Vector(t).wrapped)
 
         self.wrapped = TopLoc_Location(T)
-
-    @property
-    def inverse(self) -> "Location":
-
-        return Location(self.wrapped.Inverted())
-
-    def __mul__(self, other: "Location") -> "Location":
-
-        return Location(self.wrapped * other.wrapped)
-
-    def __pow__(self, exponent: int) -> "Location":
-
-        return Location(self.wrapped.Powered(exponent))
-
-    def toTuple(self) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
-        """Convert the location to a translation, rotation tuple."""
-
-        T = self.wrapped.Transformation()
-        trans = T.TranslationPart()
-        rot = T.GetRotation()
-
-        rv_trans = (trans.X(), trans.Y(), trans.Z())
-        rv_rot = rot.GetEulerAngles(gp_EulerSequence.gp_Extrinsic_XYZ)
-
-        return rv_trans, rv_rot

@@ -6,12 +6,7 @@ from typing import IO, Optional, Union, cast, Dict, Any
 from typing_extensions import Literal
 
 from ...cq import Workplane
-from ..shapes import Shape
-
-#from .svg import getSVG
-
-from .utils import toCompound
-
+from ..shapes import Shape, Compound
 
 class ExportTypes:
     STEP = "STEP"
@@ -21,6 +16,9 @@ ExportLiterals = Literal[
     "STEP"
 ]
 
+def toCompound(shape: Workplane) -> Compound:
+
+    return Compound.makeCompound(val for val in shape.vals() if isinstance(val, Shape))
 
 def export(
     w: Union[Shape, Workplane],
@@ -59,10 +57,6 @@ def export(
             exportType = cast(ExportLiterals, t)
         else:
             raise ValueError("Unknown extensions, specify export type explicitly")
-
-    #if exportType == ExportTypes.SVG:
-    #    with open(fname, "w") as f:
-    #        f.write(getSVG(shape, opt))
 
     if exportType == ExportTypes.STEP:
         shape.exportStep(fname, **opt)
