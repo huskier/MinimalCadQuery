@@ -352,18 +352,6 @@ def downcast(obj: TopoDS_Shape) -> TopoDS_Shape:
 
     return rv
 
-'''
-def fix(obj: TopoDS_Shape) -> TopoDS_Shape:
-    """
-    Fix a TopoDS object to suitable specialized type
-    """
-
-    sf = ShapeFix_Shape(obj)
-    sf.Perform()
-
-    return downcast(sf.Shape())
-'''
-
 class Shape(object):
     """
     Represents a shape in the system. Wraps TopoDS_Shape.

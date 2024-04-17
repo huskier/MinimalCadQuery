@@ -44,85 +44,11 @@ from typing import Iterable, List, Sequence, TypeVar, cast
 
 Shape = TypeVar("Shape", bound=ShapeProtocol)
 
-
 class Selector(object):
-    """
-    Filters a list of objects.
-
-    Filters must provide a single method that filters objects.
-    """
-
     def filter(self, objectList: Sequence[Shape]) -> List[Shape]:
-        """
-        Filter the provided list.
-
-        The default implementation returns the original list unfiltered.
-
-        :param objectList: list to filter
-        :type objectList: list of OCCT primitives
-        :return: filtered list
-        """
         return list(objectList)
 
 class StringSyntaxSelector(Selector):
-    r"""
-    Filter lists objects using a simple string syntax. All of the filters available in the string syntax
-    are also available ( usually with more functionality ) through the creation of full-fledged
-    selector objects. see :py:class:`Selector` and its subclasses
-
-    Filtering works differently depending on the type of object list being filtered.
-
-    :param selectorString: A two-part selector string, [selector][axis]
-
-    :return: objects that match the specified selector
-
-    ***Modifiers*** are ``('|','+','-','<','>','%')``
-
-        :\|:
-            parallel to ( same as :py:class:`ParallelDirSelector` ). Can return multiple objects.
-        :#:
-            perpendicular to (same as :py:class:`PerpendicularDirSelector` )
-        :+:
-            positive direction (same as :py:class:`DirectionSelector` )
-        :-:
-            negative direction (same as :py:class:`DirectionSelector`  )
-        :>:
-            maximize (same as :py:class:`DirectionMinMaxSelector` with directionMax=True)
-        :<:
-            minimize (same as :py:class:`DirectionMinMaxSelector` with directionMax=False )
-        :%:
-            curve/surface type (same as :py:class:`TypeSelector`)
-
-    ***axisStrings*** are: ``X,Y,Z,XY,YZ,XZ`` or ``(x,y,z)`` which defines an arbitrary direction
-
-    It is possible to combine simple selectors together using logical operations.
-    The following operations are supported
-
-        :and:
-            Logical AND, e.g. >X and >Y
-        :or:
-            Logical OR, e.g. \|X or \|Y
-        :not:
-            Logical NOT, e.g. not #XY
-        :exc(ept):
-            Set difference (equivalent to AND NOT): \|X exc >Z
-
-    Finally, it is also possible to use even more complex expressions with nesting
-    and arbitrary number of terms, e.g.
-
-        (not >X[0] and #XY) or >XY[0]
-
-    Selectors are a complex topic: see :ref:`selector_reference` for more information
-    """
-
     def __init__(self, selectorString):
-        """
-        Feed the input string through the parser and construct an relevant complex selector object
-        """
-        '''
-        self.selectorString = selectorString
-        parse_result = _expression_grammar.parseString(selectorString, parseAll=True)
-        self.mySelector = parse_result.asList()[0]
-        '''
         pass
 

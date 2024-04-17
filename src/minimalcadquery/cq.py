@@ -50,12 +50,6 @@ from .occ_impl.shapes import (
     Shapes,
 )
 
-from .selectors import (
-    Selector,
-    StringSyntaxSelector,
-)
-
-#CQObject = Union[Vector, Location, Shape, Sketch]
 CQObject = Union[Vector, Location, Shape]
 VectorLike = Union[Tuple[float, float], Tuple[float, float, float], Vector]
 CombineMode = Union[bool, Literal["cut", "a", "s"]]  # a : additive, s: subtractive
@@ -691,10 +685,6 @@ class Workplane(object):
         """
 
         rv: List[Face] = []
-
-        #for el in self.objects:
-        #    if isinstance(el, Sketch):
-        #        rv.extend(el)
 
         if not rv:
             rv.extend(wiresToFaces(self.ctx.popPendingWires()))

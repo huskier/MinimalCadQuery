@@ -21,8 +21,6 @@ from OCP.BRepMesh import BRepMesh_IncrementalMesh
 from OCP.TopoDS import TopoDS_Shape
 from OCP.TopLoc import TopLoc_Location
 
-#from ..types import Real
-
 Real = (float | int)
 
 TOL = 1e-2
@@ -196,23 +194,6 @@ class Vector(object):
         return Vector(gp_Vec(pnt_t.XYZ()))
 
 class Matrix:
-    """A 3d , 4x4 transformation matrix.
-
-    Used to move geometry in space.
-
-    The provided "matrix" parameter may be None, a gp_GTrsf, or a nested list of
-    values.
-
-    If given a nested list, it is expected to be of the form:
-
-        [[m11, m12, m13, m14],
-         [m21, m22, m23, m24],
-         [m31, m32, m33, m34]]
-
-    A fourth row may be given, but it is expected to be: [0.0, 0.0, 0.0, 1.0]
-    since this is a transform matrix.
-    """
-
     pass
 
 class Plane(object):
