@@ -50,9 +50,9 @@ from .occ_impl.shapes import (
     Shapes,
 )
 
-CQObject = Union[Vector, Location, Shape]
-VectorLike = Union[Tuple[float, float], Tuple[float, float, float], Vector]
-CombineMode = Union[bool, Literal["cut", "a", "s"]]  # a : additive, s: subtractive
+CQObject = (Vector | Location | Shape)
+VectorLike = (Tuple[float, float] | Tuple[float, float, float] | Vector)
+CombineMode = (bool | Literal["cut", "a", "s"])  # a : additive, s: subtractive
 TOL = 1e-6
 
 T = TypeVar("T", bound="Workplane")
@@ -63,12 +63,6 @@ This is useful when you want to allow a class to derive from
 :class:`.Workplane`, and you want a (fluent) method in the derived class to
 return an instance of the derived class, rather than of :class:`.Workplane`.
 """
-
-
-def _selectShapes(objects: Iterable[Any]) -> List[Shape]:
-
-    return [el for el in objects if isinstance(el, Shape)]
-
 
 class CQContext(object):
     """
@@ -96,18 +90,6 @@ class CQContext(object):
         self.tolerance = 0.0001  # user specified tolerance
         self.tags = {}
 
-    def popPendingEdges(self, errorOnEmpty: bool = True) -> List[Edge]:
-        """
-        Get and clear pending edges.
-
-        :raises ValueError: if errorOnEmpty is True and no edges are present.
-        """
-        if errorOnEmpty and not self.pendingEdges:
-            raise ValueError("No pending edges present")
-        out = self.pendingEdges
-        self.pendingEdges = []
-        return out
-
     def popPendingWires(self, errorOnEmpty: bool = True) -> List[Wire]:
         """
         Get and clear pending wires.
@@ -119,7 +101,6 @@ class CQContext(object):
         out = self.pendingWires
         self.pendingWires = []
         return out
-
 
 class Workplane(object):
     """
@@ -161,7 +142,7 @@ class Workplane(object):
     @overload
     def __init__(
         self,
-        inPlane: Union[Plane, str] = "XY",
+        inPlane: (Plane | str) = "XY",
         origin: VectorLike = (0, 0, 0),
         obj: Optional[CQObject] = None,
     ) -> None:
@@ -253,15 +234,6 @@ class Workplane(object):
         """
         return self.objects
 
-    def val(self) -> CQObject:
-        """
-        Return the first value on the stack. If no value is present, current plane origin is returned.
-
-        :return: the first value on the stack.
-        :rtype: A CAD primitive
-        """
-        return self.objects[0] if self.objects else self.plane.origin
-
     def _findType(self, types, searchStack=True, searchParents=True):
 
         if searchStack:
@@ -330,54 +302,6 @@ class Workplane(object):
         else:
             return p
 
-    def _findFromEdge(self, useLocalCoords: bool = False) -> Edge:
-        """
-        Finds the previous edge for an operation that needs it, similar to
-        method _findFromPoint. Examples include tangentArcPoint.
-
-        :param useLocalCoords: selects whether the point is returned
-        in local coordinates or global coordinates.
-        :return: an Edge
-        """
-        obj = self.objects[-1] if self.objects else self.plane.origin
-
-        if not isinstance(obj, Edge):
-            raise RuntimeError(
-                "Previous Edge requested, but the previous object was of "
-                + f"type {type(obj)}, not an Edge."
-            )
-
-        rv: Edge = obj
-
-        if useLocalCoords:
-            rv = self.plane.toLocalCoords(rv)
-
-        return rv
-
-    def _toVectors(
-        self, pts: Iterable[VectorLike], includeCurrent: bool
-    ) -> List[Vector]:
-
-        vecs = [self.plane.toWorldCoords(p) for p in pts]
-
-        if includeCurrent:
-            gstartPoint = self._findFromPoint(False)
-            allPoints = [gstartPoint] + vecs
-        else:
-            allPoints = vecs
-
-        return allPoints
-
-    def _addPendingEdge(self, edge: Edge) -> None:
-        """
-        Queues an edge for later combination into a wire.
-
-        """
-        self.ctx.pendingEdges.append(edge)
-
-        if self.ctx.firstPoint is None:
-            self.ctx.firstPoint = self.plane.toLocalCoords(edge.startPoint())
-
     def _addPendingWire(self, wire: Wire) -> None:
         """
         Queue a Wire for later extrusion
@@ -394,40 +318,6 @@ class Workplane(object):
         when necessary to make a solid.
         """
         self.ctx.pendingWires.append(wire)
-
-    def wire(self: T, forConstruction: bool = False) -> T:
-        """
-        Returns a CQ object with all pending edges connected into a wire.
-
-        All edges on the stack that can be combined will be combined into a single wire object,
-        and other objects will remain on the stack unmodified. If there are no pending edges,
-        this method will just return self.
-
-        :param forConstruction: whether the wire should be used to make a solid, or if it is just
-            for reference
-
-        This method is primarily of use to plugin developers making utilities for 2D construction.
-        This method should be called when a user operation implies that 2D construction is
-        finished, and we are ready to begin working in 3d.
-
-        SEE '2D construction concepts' for a more detailed explanation of how CadQuery handles
-        edges, wires, etc.
-
-        Any non edges will still remain.
-        """
-
-        # do not consolidate if there are no free edges
-        if len(self.ctx.pendingEdges) == 0:
-            return self
-
-        edges = self.ctx.popPendingEdges()
-        w = Wire.assembleEdges(edges)
-        if not forConstruction:
-            self._addPendingWire(w)
-
-        others = [e for e in self.objects if not isinstance(e, Edge)]
-
-        return self.newObject(others + [w])
 
     def eachpoint(
         self: T,
@@ -487,7 +377,7 @@ class Workplane(object):
         self: T,
         xLen: float,
         yLen: float,
-        centered: Union[bool, Tuple[bool, bool]] = True,
+        centered: (bool | Tuple[bool, bool]) = True,
         forConstruction: bool = False,
     ) -> T:
         """
@@ -545,7 +435,7 @@ class Workplane(object):
 
     def extrude(
         self: T,
-        until: Union[float, Literal["next", "last"], Face],
+        until: (float | Literal["next", "last"] | Face),
         combine: CombineMode = True,
         clean: bool = True,
         both: bool = False,
@@ -609,7 +499,7 @@ class Workplane(object):
 
     def _combineWithBase(
         self: T,
-        obj: Union[Shape, Iterable[Shape]],
+        obj: (Shape | Iterable[Shape]),
         mode: CombineMode = True,
         clean: bool = False,
     ) -> T:
@@ -696,9 +586,9 @@ class Workplane(object):
         distance: Optional[float] = None,
         both: bool = False,
         taper: Optional[float] = None,
-        upToFace: Optional[Union[int, Face]] = None,
+        upToFace: Optional[(int | Face)] = None,
         additive: bool = True,
-    ) -> Union[Solid, Compound]:
+    ) -> (Solid | Compound):
         """
         Make a prismatic solid from the existing set of pending wires.
 
@@ -807,7 +697,7 @@ class Workplane(object):
         length: float,
         width: float,
         height: float,
-        centered: Union[bool, Tuple[bool, bool, bool]] = True,
+        centered: (bool | Tuple[bool, bool, bool]) = True,
         combine: CombineMode = True,
         clean: bool = True,
     ) -> T:
@@ -896,18 +786,6 @@ class Workplane(object):
         ]
 
         return self.newObject(cleanObjects)
-
-    def toPending(self: T) -> T:
-        """
-        Adds wires/edges to pendingWires/pendingEdges.
-
-        :return: same CQ object with updated context.
-        """
-
-        self.ctx.pendingWires.extend(el for el in self.objects if isinstance(el, Wire))
-        self.ctx.pendingEdges.extend(el for el in self.objects if isinstance(el, Edge))
-
-        return self
 
 # alias for backward compatibility
 CQ = Workplane

@@ -555,7 +555,7 @@ class Shape(object):
         return [Face(i) for i in self._entities("Face")]
     
     def _filter(
-        self, selector: Optional[Union[Selector, str]], objs: Iterable["Shape"]
+        self, selector: Optional[(Selector | str)], objs: Iterable["Shape"]
     ) -> "Shape":
 
         selectorObj: Selector
@@ -602,7 +602,7 @@ class Shape(object):
         self,
         args: Iterable["Shape"],
         tools: Iterable["Shape"],
-        op: Union[BRepAlgoAPI_BooleanOperation, BRepAlgoAPI_Splitter],
+        op: (BRepAlgoAPI_BooleanOperation | BRepAlgoAPI_Splitter),
         parallel: bool = True,
     ) -> "Shape":
         """
@@ -790,7 +790,7 @@ class Vertex(Shape):
     pass
 
 class Mixin1DProtocol(ShapeProtocol, Protocol):
-    def _geomAdaptor(self) -> Union[BRepAdaptor_Curve, BRepAdaptor_CompCurve]:
+    def _geomAdaptor(self) -> (BRepAdaptor_Curve | BRepAdaptor_CompCurve):
         ...
 
     def paramAt(self, d: float) -> float:
@@ -1046,41 +1046,6 @@ class Mixin1D(object):
 
         return [self.locationAt(d, mode, frame, planar) for d in ds]
 
-    def project(
-        self: T1D, face: "Face", d: VectorLike, closest: bool = True
-    ) -> Union[T1D, List[T1D]]:
-        """
-        Project onto a face along the specified direction
-        """
-
-        bldr = BRepProj_Projection(self.wrapped, face.wrapped, Vector(d).toDir())
-        shapes = Compound(bldr.Shape())
-
-        # select the closest projection if requested
-        rv: Union[T1D, List[T1D]]
-
-        if closest:
-
-            dist_calc = BRepExtrema_DistShapeShape()
-            dist_calc.LoadS1(self.wrapped)
-
-            min_dist = inf
-
-            for el in shapes:
-                dist_calc.LoadS2(el.wrapped)
-                dist_calc.Perform()
-                dist = dist_calc.Value()
-
-                if dist < min_dist:
-                    min_dist = dist
-                    rv = tcast(T1D, el)
-
-        else:
-            rv = [tcast(T1D, el) for el in shapes]
-
-        return rv
-
-
 class Edge(Shape, Mixin1D):
     """
     A trimmed curve that represents the border of a face
@@ -1182,59 +1147,6 @@ TS = TypeVar("TS", bound=ShapeProtocol)
 
 
 class Mixin3D(object):
-    def fillet(self: Any, radius: float, edgeList: Iterable[Edge]) -> Any:
-        """
-        Fillets the specified edges of this solid.
-
-        :param radius: float > 0, the radius of the fillet
-        :param edgeList:  a list of Edge objects, which must belong to this solid
-        :return: Filleted solid
-        """
-        nativeEdges = [e.wrapped for e in edgeList]
-
-        fillet_builder = BRepFilletAPI_MakeFillet(self.wrapped)
-
-        for e in nativeEdges:
-            fillet_builder.Add(radius, e)
-
-        return self.__class__(fillet_builder.Shape())
-
-    def chamfer(
-        self: Any, length: float, length2: Optional[float], edgeList: Iterable[Edge]
-    ) -> Any:
-        """
-        Chamfers the specified edges of this solid.
-
-        :param length: length > 0, the length (length) of the chamfer
-        :param length2: length2 > 0, optional parameter for asymmetrical chamfer. Should be `None` if not required.
-        :param edgeList:  a list of Edge objects, which must belong to this solid
-        :return: Chamfered solid
-        """
-        nativeEdges = [e.wrapped for e in edgeList]
-
-        # make a edge --> faces mapping
-        edge_face_map = TopTools_IndexedDataMapOfShapeListOfShape()
-        TopExp.MapShapesAndAncestors_s(
-            self.wrapped, ta.TopAbs_EDGE, ta.TopAbs_FACE, edge_face_map
-        )
-
-        # note: we prefer 'length' word to 'radius' as opposed to FreeCAD's API
-        chamfer_builder = BRepFilletAPI_MakeChamfer(self.wrapped)
-
-        if length2:
-            d1 = length
-            d2 = length2
-        else:
-            d1 = length
-            d2 = length
-
-        for e in nativeEdges:
-            face = edge_face_map.FindFromKey(e).First()
-            chamfer_builder.Add(
-                d1, d2, e, TopoDS.Face_s(face)
-            )  # NB: edge_face_map return a generic TopoDS_Shape
-        return self.__class__(chamfer_builder.Shape())
-
     def shell(
         self: Any,
         faceList: Optional[Iterable[Face]],
@@ -1351,7 +1263,7 @@ class Mixin3D(object):
         additive: bool = True,
     ) -> "Solid":
 
-        shape: Union[TopoDS_Shape, TopoDS_Solid] = self.wrapped
+        shape: (TopoDS_Shape | TopoDS_Solid) = self.wrapped
         for face in faces:
             feat = BRepFeat_MakeDPrism(
                 shape,
@@ -1615,21 +1527,4 @@ def wiresToFaces(wireList: List[Wire]) -> List[Face]:
     """
     Convert wires to a list of faces.
     """
-
     return Face.makeFromWires(wireList[0], wireList[1:]).Faces()
-
-
-def edgesToWires(edges: Iterable[Edge], tol: float = 1e-6) -> List[Wire]:
-    """
-    Convert edges to a list of wires.
-    """
-
-    edges_in = TopTools_HSequenceOfShape()
-    wires_out = TopTools_HSequenceOfShape()
-
-    for e in edges:
-        edges_in.Append(e.wrapped)
-
-    ShapeAnalysis_FreeBounds.ConnectEdgesToWires_s(edges_in, tol, False, wires_out)
-
-    return [Wire(el) for el in wires_out]

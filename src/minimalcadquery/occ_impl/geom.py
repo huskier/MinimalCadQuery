@@ -25,7 +25,6 @@ Real = (float | int)
 
 TOL = 1e-2
 
-#VectorLike = Union["Vector", Tuple[Real, Real], Tuple[Real, Real, Real]]
 VectorLike = ("Vector" | Tuple[Real, Real] | Tuple[Real, Real, Real])
 
 
@@ -63,7 +62,7 @@ class Vector(object):
         ...
 
     @overload
-    def __init__(self, v: Union[gp_Vec, gp_Pnt, gp_Dir, gp_XYZ]) -> None:
+    def __init__(self, v: (gp_Vec | gp_Pnt | gp_Dir | gp_XYZ)) -> None:
         ...
 
     @overload
@@ -347,9 +346,9 @@ class Plane(object):
 
     def __init__(
         self,
-        origin: Union[Tuple[float, float, float], Vector],
-        xDir: Optional[Union[Tuple[float, float, float], Vector]] = None,
-        normal: Union[Tuple[float, float, float], Vector] = (0, 0, 1),
+        origin: (Tuple[float, float, float] | Vector),
+        xDir: Optional[(Tuple[float, float, float] | Vector)] = None,
+        normal: (Tuple[float, float, float] | Vector) = (0, 0, 1),
     ):
         """
         Create a Plane with an arbitrary orientation
