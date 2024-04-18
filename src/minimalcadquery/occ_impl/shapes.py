@@ -430,47 +430,6 @@ class Shape(object):
 
         return writer.Write(fileName)
 
-    '''
-    def geomType(self) -> Geoms:
-        """
-        Gets the underlying geometry type.
-
-        Implementations can return any values desired, but the values the user
-        uses in type filters should correspond to these.
-
-        As an example, if a user does::
-
-            CQ(object).faces("%mytype")
-
-        The expectation is that the geomType attribute will return 'mytype'
-
-        The return values depend on the type of the shape:
-
-        | Vertex:  always 'Vertex'
-        | Edge:   LINE, CIRCLE, ELLIPSE, HYPERBOLA, PARABOLA, BEZIER,
-        |         BSPLINE, OFFSET, OTHER
-        | Face:   PLANE, CYLINDER, CONE, SPHERE, TORUS, BEZIER, BSPLINE,
-        |         REVOLUTION, EXTRUSION, OFFSET, OTHER
-        | Solid:  'Solid'
-        | Shell:  'Shell'
-        | Compound: 'Compound'
-        | Wire:   'Wire'
-
-        :returns: A string according to the geometry type
-        """
-
-        tr: Any = geom_LUT[shapetype(self.wrapped)]
-
-        if isinstance(tr, str):
-            rv = tr
-        elif tr is BRepAdaptor_Curve:
-            rv = geom_LUT_EDGE[tr(self.wrapped).GetType()]
-        else:
-            rv = geom_LUT_FACE[tr(self.wrapped).GetType()]
-
-        return tcast(Geoms, rv)
-    '''
-
     def isNull(self) -> bool:
         """
         Returns true if this shape is null. In other words, it references no
@@ -486,37 +445,6 @@ class Shape(object):
         :py:meth:`isEqual`
         """
         return self.wrapped.IsSame(other.wrapped)
-
-    @staticmethod
-    def _center_of_mass(shape: "Shape") -> Vector:
-
-        Properties = GProp_GProps()
-        BRepGProp.VolumeProperties_s(shape.wrapped, Properties)
-
-        return Vector(Properties.CentreOfMass())
-
-    def Center(self) -> Vector:
-        """
-        :returns: The point of the center of mass of this Shape
-        """
-
-        return Shape.centerOfMass(self)
-  
-    @staticmethod
-    def centerOfMass(obj: "Shape") -> Vector:
-        """
-        Calculates the center of 'mass' of an object.
-
-        :param obj: Compute the center of mass of this object
-        """
-        Properties = GProp_GProps()
-        calc_function = shape_properties_LUT[shapetype(obj.wrapped)]
-
-        if calc_function:
-            calc_function(obj.wrapped, Properties)
-            return Vector(Properties.CentreOfMass())
-        else:
-            raise NotImplementedError
 
     def ShapeType(self) -> Shapes:
         return tcast(Shapes, shape_LUT[shapetype(self.wrapped)])
