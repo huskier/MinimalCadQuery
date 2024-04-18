@@ -134,20 +134,12 @@ class Vector(object):
     def cross(self, v: "Vector") -> "Vector":
         return Vector(self.wrapped.Crossed(v.wrapped))
 
-    def dot(self, v: "Vector") -> float:
-        return self.wrapped.Dot(v.wrapped)
-
-    def sub(self, v: "Vector") -> "Vector":
-        return Vector(self.wrapped.Subtracted(v.wrapped))
-
-    def __sub__(self, v: "Vector") -> "Vector":
-        return self.sub(v)
-
     def add(self, v: "Vector") -> "Vector":
         return Vector(self.wrapped.Added(v.wrapped))
 
     def __add__(self, v: "Vector") -> "Vector":
         return self.add(v)
+
 
     def multiply(self, scale: float) -> "Vector":
         """Return a copy multiplied by the provided scalar"""

@@ -430,6 +430,7 @@ class Shape(object):
 
         return writer.Write(fileName)
 
+    '''
     def geomType(self) -> Geoms:
         """
         Gets the underlying geometry type.
@@ -468,6 +469,7 @@ class Shape(object):
             rv = geom_LUT_FACE[tr(self.wrapped).GetType()]
 
         return tcast(Geoms, rv)
+    '''
 
     def isNull(self) -> bool:
         """
@@ -526,27 +528,6 @@ class Shape(object):
 
         return tcast(Iterable[TopoDS_Shape], shape_set)
 
-    def _entitiesFrom(
-        self, child_type: Shapes, parent_type: Shapes
-    ) -> Dict["Shape", List["Shape"]]:
-
-        res = TopTools_IndexedDataMapOfShapeListOfShape()
-
-        TopExp.MapShapesAndAncestors_s(
-            self.wrapped,
-            inverse_shape_LUT[child_type],
-            inverse_shape_LUT[parent_type],
-            res,
-        )
-
-        out: Dict[Shape, List[Shape]] = {}
-        for i in range(1, res.Extent() + 1):
-            out[Shape.cast(res.FindKey(i))] = [
-                Shape.cast(el) for el in res.FindFromIndex(i)
-            ]
-
-        return out
-
     def Faces(self) -> List["Face"]:
         """
         :returns: All the faces in this Shape
@@ -554,27 +535,6 @@ class Shape(object):
 
         return [Face(i) for i in self._entities("Face")]
     
-    def _filter(
-        self, selector: Optional[(Selector | str)], objs: Iterable["Shape"]
-    ) -> "Shape":
-
-        selectorObj: Selector
-        if selector:
-            if isinstance(selector, str):
-                selectorObj = StringSyntaxSelector(selector)
-            else:
-                selectorObj = selector
-            selected = selectorObj.filter(list(objs))
-        else:
-            selected = list(objs)
-
-        if len(selected) == 1:
-            rv = selected[0]
-        else:
-            rv = Compound.makeCompound(selected)
-
-        return rv
-
     def move(self: T, loc: Location) -> T:
         """
         Apply a location in relative sense (i.e. update current location) to self
@@ -662,99 +622,6 @@ class Shape(object):
 
         return rv
 
-    def intersect(self, *toIntersect: "Shape", tol: Optional[float] = None) -> "Shape":
-        """
-        Intersection of the positional arguments and this Shape.
-
-        :param tol: Fuzzy mode tolerance
-        """
-
-        intersect_op = BRepAlgoAPI_Common()
-
-        if tol:
-            intersect_op.SetFuzzyValue(tol)
-
-        return self._bool_op((self,), toIntersect, intersect_op)
-
-    def facesIntersectedByLine(
-        self,
-        point: VectorLike,
-        axis: VectorLike,
-        tol: float = 1e-4,
-        direction: Optional[Literal["AlongAxis", "Opposite"]] = None,
-    ):
-        """
-        Computes the intersections between the provided line and the faces of this Shape
-
-        :param point: Base point for defining a line
-        :param axis: Axis on which the line rests
-        :param tol: Intersection tolerance
-        :param direction: Valid values: "AlongAxis", "Opposite";
-            If specified, will ignore all faces that are not in the specified direction
-            including the face where the point lies if it is the case
-        :returns: A list of intersected faces sorted by distance from point
-        """
-
-        oc_point = (
-            gp_Pnt(*point.toTuple()) if isinstance(point, Vector) else gp_Pnt(*point)
-        )
-        oc_axis = (
-            gp_Dir(Vector(axis).wrapped)
-            if not isinstance(axis, Vector)
-            else gp_Dir(axis.wrapped)
-        )
-
-        line = gce_MakeLin(oc_point, oc_axis).Value()
-        shape = self.wrapped
-
-        intersectMaker = BRepIntCurveSurface_Inter()
-        intersectMaker.Init(shape, line, tol)
-
-        faces_dist = []  # using a list instead of a dictionary to be able to sort it
-        while intersectMaker.More():
-            interPt = intersectMaker.Pnt()
-            interDirMk = gce_MakeDir(oc_point, interPt)
-
-            distance = oc_point.SquareDistance(interPt)
-
-            # interDir is not done when `oc_point` and `oc_axis` have the same coord
-            if interDirMk.IsDone():
-                interDir: Any = interDirMk.Value()
-            else:
-                interDir = None
-
-            if direction == "AlongAxis":
-                if (
-                    interDir is not None
-                    and not interDir.IsOpposite(oc_axis, tol)
-                    and distance > tol
-                ):
-                    faces_dist.append((intersectMaker.Face(), distance))
-
-            elif direction == "Opposite":
-                if (
-                    interDir is not None
-                    and interDir.IsOpposite(oc_axis, tol)
-                    and distance > tol
-                ):
-                    faces_dist.append((intersectMaker.Face(), distance))
-
-            elif direction is None:
-                faces_dist.append(
-                    (intersectMaker.Face(), abs(distance))
-                )  # will sort all intersected faces by distance whatever the direction is
-            else:
-                raise ValueError(
-                    "Invalid direction specification.\nValid specification are 'AlongAxis' and 'Opposite'."
-                )
-
-            intersectMaker.Next()
-
-        faces_dist.sort(key=lambda x: x[1])
-        faces = [face[0] for face in faces_dist]
-
-        return [Face(face) for face in faces]
-
     def __iter__(self) -> Iterator["Shape"]:
         """
         Iterate over subshapes.
@@ -790,261 +657,14 @@ class Vertex(Shape):
     pass
 
 class Mixin1DProtocol(ShapeProtocol, Protocol):
-    def _geomAdaptor(self) -> (BRepAdaptor_Curve | BRepAdaptor_CompCurve):
-        ...
-
-    def paramAt(self, d: float) -> float:
-        ...
-
-    def positionAt(
-        self, d: float, mode: Literal["length", "parameter"] = "length",
-    ) -> Vector:
-        ...
-
-    def locationAt(
-        self,
-        d: float,
-        mode: Literal["length", "parameter"] = "length",
-        frame: Literal["frenet", "corrected"] = "frenet",
-        planar: bool = False,
-    ) -> Location:
-        ...
-
+    pass
 
 T1D = TypeVar("T1D", bound=Mixin1DProtocol)
 
 
 class Mixin1D(object):
-    def _bounds(self: Mixin1DProtocol) -> Tuple[float, float]:
 
-        curve = self._geomAdaptor()
-        return curve.FirstParameter(), curve.LastParameter()
-
-    def startPoint(self: Mixin1DProtocol) -> Vector:
-        """
-
-        :return: a vector representing the start point of this edge
-
-        Note, circles may have the start and end points the same
-        """
-
-        curve = self._geomAdaptor()
-        umin = curve.FirstParameter()
-
-        return Vector(curve.Value(umin))
-
-    def endPoint(self: Mixin1DProtocol) -> Vector:
-        """
-
-        :return: a vector representing the end point of this edge.
-
-        Note, circles may have the start and end points the same
-        """
-
-        curve = self._geomAdaptor()
-        umax = curve.LastParameter()
-
-        return Vector(curve.Value(umax))
-
-    def paramAt(self: Mixin1DProtocol, d: float) -> float:
-        """
-        Compute parameter value at the specified normalized distance.
-
-        :param d: normalized distance [0, 1]
-        :return: parameter value
-        """
-
-        curve = self._geomAdaptor()
-
-        l = GCPnts_AbscissaPoint.Length_s(curve)
-        return GCPnts_AbscissaPoint(curve, l * d, curve.FirstParameter()).Parameter()
-
-    def tangentAt(
-        self: Mixin1DProtocol,
-        locationParam: float = 0.5,
-        mode: Literal["length", "parameter"] = "length",
-    ) -> Vector:
-        """
-        Compute tangent vector at the specified location.
-
-        :param locationParam: distance or parameter value (default: 0.5)
-        :param mode: position calculation mode (default: parameter)
-        :return: tangent vector
-        """
-
-        curve = self._geomAdaptor()
-
-        tmp = gp_Pnt()
-        res = gp_Vec()
-
-        if mode == "length":
-            param = self.paramAt(locationParam)
-        else:
-            param = locationParam
-
-        curve.D1(param, tmp, res)
-
-        return Vector(gp_Dir(res))
-
-    def normal(self: Mixin1DProtocol) -> Vector:
-        """
-        Calculate the normal Vector. Only possible for planar curves.
-
-        :return: normal vector
-        """
-
-        curve = self._geomAdaptor()
-        gtype = self.geomType()
-
-        if gtype == "CIRCLE":
-            circ = curve.Circle()
-            rv = Vector(circ.Axis().Direction())
-        elif gtype == "ELLIPSE":
-            ell = curve.Ellipse()
-            rv = Vector(ell.Axis().Direction())
-        else:
-            fs = BRepLib_FindSurface(self.wrapped, OnlyPlane=True)
-            surf = fs.Surface()
-
-            if isinstance(surf, Geom_Plane):
-                pln = surf.Pln()
-                rv = Vector(pln.Axis().Direction())
-            else:
-                raise ValueError("Normal not defined")
-
-        return rv
-
-    def Center(self: Mixin1DProtocol) -> Vector:
-
-        Properties = GProp_GProps()
-        BRepGProp.LinearProperties_s(self.wrapped, Properties)
-
-        return Vector(Properties.CentreOfMass())
-
-    def Length(self: Mixin1DProtocol) -> float:
-
-        return GCPnts_AbscissaPoint.Length_s(self._geomAdaptor())
-
-    def radius(self: Mixin1DProtocol) -> float:
-        """
-        Calculate the radius.
-
-        Note that when applied to a Wire, the radius is simply the radius of the first edge.
-
-        :return: radius
-        :raises ValueError: if kernel can not reduce the shape to a circular edge
-        """
-        geom = self._geomAdaptor()
-        try:
-            circ = geom.Circle()
-        except (Standard_NoSuchObject, Standard_Failure) as e:
-            raise ValueError("Shape could not be reduced to a circle") from e
-        return circ.Radius()
-
-    def IsClosed(self: Mixin1DProtocol) -> bool:
-
-        return BRep_Tool.IsClosed_s(self.wrapped)
-
-    def positionAt(
-        self: Mixin1DProtocol,
-        d: float,
-        mode: Literal["length", "parameter"] = "length",
-    ) -> Vector:
-        """Generate a position along the underlying curve.
-
-        :param d: distance or parameter value
-        :param mode: position calculation mode (default: length)
-        :return: A Vector on the underlying curve located at the specified d value.
-        """
-
-        curve = self._geomAdaptor()
-
-        if mode == "length":
-            param = self.paramAt(d)
-        else:
-            param = d
-
-        return Vector(curve.Value(param))
-
-    def positions(
-        self: Mixin1DProtocol,
-        ds: Iterable[float],
-        mode: Literal["length", "parameter"] = "length",
-    ) -> List[Vector]:
-        """Generate positions along the underlying curve
-
-        :param ds: distance or parameter values
-        :param mode: position calculation mode (default: length)
-        :return: A list of Vector objects.
-        """
-
-        return [self.positionAt(d, mode) for d in ds]
-
-    def locationAt(
-        self: Mixin1DProtocol,
-        d: float,
-        mode: Literal["length", "parameter"] = "length",
-        frame: Literal["frenet", "corrected"] = "frenet",
-        planar: bool = False,
-    ) -> Location:
-        """Generate a location along the underlying curve.
-
-        :param d: distance or parameter value
-        :param mode: position calculation mode (default: length)
-        :param frame: moving frame calculation method (default: frenet)
-        :param planar: planar mode
-        :return: A Location object representing local coordinate system at the specified distance.
-        """
-
-        curve = self._geomAdaptor()
-
-        if mode == "length":
-            param = self.paramAt(d)
-        else:
-            param = d
-
-        law: GeomFill_TrihedronLaw
-        if frame == "frenet":
-            law = GeomFill_Frenet()
-        else:
-            law = GeomFill_CorrectedFrenet()
-
-        law.SetCurve(curve)
-
-        tangent, normal, binormal = gp_Vec(), gp_Vec(), gp_Vec()
-
-        law.D0(param, tangent, normal, binormal)
-        pnt = curve.Value(param)
-
-        T = gp_Trsf()
-        if planar:
-            T.SetTransformation(
-                gp_Ax3(pnt, gp_Dir(0, 0, 1), gp_Dir(normal.XYZ())), gp_Ax3()
-            )
-        else:
-            T.SetTransformation(
-                gp_Ax3(pnt, gp_Dir(tangent.XYZ()), gp_Dir(normal.XYZ())), gp_Ax3()
-            )
-
-        return Location(TopLoc_Location(T))
-
-    def locations(
-        self: Mixin1DProtocol,
-        ds: Iterable[float],
-        mode: Literal["length", "parameter"] = "length",
-        frame: Literal["frenet", "corrected"] = "frenet",
-        planar: bool = False,
-    ) -> List[Location]:
-        """Generate location along the curve
-
-        :param ds: distance or parameter values
-        :param mode: position calculation mode (default: length)
-        :param frame: moving frame calculation method (default: frenet)
-        :param planar: planar mode
-        :return: A list of Location objects representing local coordinate systems at the specified distances.
-        """
-
-        return [self.locationAt(d, mode, frame, planar) for d in ds]
+    pass
 
 class Edge(Shape, Mixin1D):
     """
@@ -1147,144 +767,8 @@ TS = TypeVar("TS", bound=ShapeProtocol)
 
 
 class Mixin3D(object):
-    def shell(
-        self: Any,
-        faceList: Optional[Iterable[Face]],
-        thickness: float,
-        tolerance: float = 0.0001,
-        kind: Literal["arc", "intersection"] = "arc",
-    ) -> Any:
-        """
-        Make a shelled solid of self.
 
-        :param faceList: List of faces to be removed, which must be part of the solid. Can
-          be an empty list.
-        :param thickness: Floating point thickness. Positive shells outwards, negative
-          shells inwards.
-        :param tolerance: Modelling tolerance of the method, default=0.0001.
-        :return: A shelled solid.
-        """
-
-        kind_dict = {
-            "arc": GeomAbs_JoinType.GeomAbs_Arc,
-            "intersection": GeomAbs_JoinType.GeomAbs_Intersection,
-        }
-
-        occ_faces_list = TopTools_ListOfShape()
-        shell_builder = BRepOffsetAPI_MakeThickSolid()
-
-        if faceList:
-            for f in faceList:
-                occ_faces_list.Append(f.wrapped)
-
-        shell_builder.MakeThickSolidByJoin(
-            self.wrapped,
-            occ_faces_list,
-            thickness,
-            tolerance,
-            Intersection=True,
-            Join=kind_dict[kind],
-        )
-        shell_builder.Build()
-
-        if faceList:
-            rv = self.__class__(shell_builder.Shape())
-
-        else:  # if no faces provided a watertight solid will be constructed
-            s1 = self.__class__(shell_builder.Shape()).Shells()[0].wrapped
-            s2 = self.Shells()[0].wrapped
-
-            # s1 can be outer or inner shell depending on the thickness sign
-            if thickness > 0:
-                sol = BRepBuilderAPI_MakeSolid(s1, s2)
-            else:
-                sol = BRepBuilderAPI_MakeSolid(s2, s1)
-
-            # fix needed for the orientations
-            rv = self.__class__(sol.Shape()).fix()
-
-        return rv
-
-    def isInside(
-        self: ShapeProtocol, point: VectorLike, tolerance: float = 1.0e-6
-    ) -> bool:
-        """
-        Returns whether or not the point is inside a solid or compound
-        object within the specified tolerance.
-
-        :param point: tuple or Vector representing 3D point to be tested
-        :param tolerance: tolerance for inside determination, default=1.0e-6
-        :return: bool indicating whether or not point is within solid
-        """
-        if isinstance(point, Vector):
-            point = point.toTuple()
-
-        solid_classifier = BRepClass3d_SolidClassifier(self.wrapped)
-        solid_classifier.Perform(gp_Pnt(*point), tolerance)
-
-        return solid_classifier.State() == ta.TopAbs_IN or solid_classifier.IsOnAFace()
-
-    @cqmultimethod
-    def dprism(
-        self: TS,
-        basis: Optional[Face],
-        profiles: List[Wire],
-        depth: Optional[Real] = None,
-        taper: Real = 0,
-        upToFace: Optional[Face] = None,
-        thruAll: bool = True,
-        additive: bool = True,
-    ) -> "Solid":
-        """
-        Make a prismatic feature (additive or subtractive)
-
-        :param basis: face to perform the operation on
-        :param profiles: list of profiles
-        :param depth: depth of the cut or extrusion
-        :param upToFace: a face to extrude until
-        :param thruAll: cut thruAll
-        :return: a Solid object
-        """
-
-        sorted_profiles = sortWiresByBuildOrder(profiles)
-        faces = [Face.makeFromWires(p[0], p[1:]) for p in sorted_profiles]
-
-        return self.dprism(basis, faces, depth, taper, upToFace, thruAll, additive)
-
-    @dprism.register
-    def dprism(
-        self: TS,
-        basis: Optional[Face],
-        faces: List[Face],
-        depth: Optional[Real] = None,
-        taper: Real = 0,
-        upToFace: Optional[Face] = None,
-        thruAll: bool = True,
-        additive: bool = True,
-    ) -> "Solid":
-
-        shape: (TopoDS_Shape | TopoDS_Solid) = self.wrapped
-        for face in faces:
-            feat = BRepFeat_MakeDPrism(
-                shape,
-                face.wrapped,
-                basis.wrapped if basis else TopoDS_Face(),
-                radians(taper),
-                additive,
-                False,
-            )
-
-            if upToFace is not None:
-                feat.Perform(upToFace.wrapped)
-            elif thruAll or depth is None:
-                feat.PerformThruAll()
-            else:
-                feat.Perform(depth)
-
-            shape = feat.Shape()
-
-        return self.__class__(shape)
-
+    pass
 
 class Solid(Shape, Mixin3D):
     """
@@ -1474,22 +958,6 @@ class Compound(Shape, Mixin3D):
 
         return tcast(Compound, rv)
 
-    def intersect(
-        self, *toIntersect: "Shape", tol: Optional[float] = None
-    ) -> "Compound":
-        """
-        Intersection of the positional arguments and this Shape.
-
-        :param tol: Fuzzy mode tolerance
-        """
-
-        intersect_op = BRepAlgoAPI_Common()
-
-        if tol:
-            intersect_op.SetFuzzyValue(tol)
-
-        return tcast(Compound, self._bool_op(self, toIntersect, intersect_op))
-
 def sortWiresByBuildOrder(wireList: List[Wire]) -> List[List[Wire]]:
     """Tries to determine how wires should be combined into faces.
 
@@ -1521,7 +989,6 @@ def sortWiresByBuildOrder(wireList: List[Wire]) -> List[List[Wire]]:
         rv.append([face.outerWire(),] + face.innerWires())
 
     return rv
-
 
 def wiresToFaces(wireList: List[Wire]) -> List[Face]:
     """
