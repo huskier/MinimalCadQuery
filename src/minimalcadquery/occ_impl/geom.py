@@ -42,34 +42,10 @@ class Vector(object):
         * three float values: x, y, and z
         * two float values: x,y
     """
-
     _wrapped: gp_Vec
 
-    @overload
-    def __init__(self, x: float, y: float, z: float) -> None:
-        ...
-
-    @overload
-    def __init__(self, x: float, y: float) -> None:
-        ...
-
-    @overload
-    def __init__(self, v: "Vector") -> None:
-        ...
-
-    @overload
-    def __init__(self, v: Sequence[float]) -> None:
-        ...
-
-    @overload
-    def __init__(self, v: (gp_Vec | gp_Pnt | gp_Dir | gp_XYZ)) -> None:
-        ...
-
-    @overload
-    def __init__(self) -> None:
-        ...
-
     def __init__(self, *args):
+        print("In Vector's __init__(self, *args): function......") 
         if len(args) == 3:
             fV = gp_Vec(*args)
         elif len(args) == 2:
@@ -98,91 +74,75 @@ class Vector(object):
 
     @property
     def x(self) -> float:
+        print("In Vector's x(self) -> float: function......")      
         return self.wrapped.X()
-
-    @x.setter
-    def x(self, value: float) -> None:
-        self.wrapped.SetX(value)
 
     @property
     def y(self) -> float:
-        return self.wrapped.Y()
+        print("In Vector's y(self) -> float: function......")      
 
-    @y.setter
-    def y(self, value: float) -> None:
-        self.wrapped.SetY(value)
+        return self.wrapped.Y()
 
     @property
     def z(self) -> float:
-        return self.wrapped.Z()
+        print("In Vector's z(self) -> float: function......")      
 
-    @z.setter
-    def z(self, value: float) -> None:
-        self.wrapped.SetZ(value)
+        return self.wrapped.Z()
 
     @property
     def Length(self) -> float:
+        print("In Vector's Length(self) -> float: function......")      
+
         return self.wrapped.Magnitude()
 
     @property
     def wrapped(self) -> gp_Vec:
+        print("In Vector's wrapped(self) -> gp_Vec: function......")      
+
         return self._wrapped
 
     def toTuple(self) -> Tuple[float, float, float]:
+        print("In Vector's toTuple(self) -> Tuple[float, float, float]: function......")      
+
         return (self.x, self.y, self.z)
 
     def cross(self, v: "Vector") -> "Vector":
+        print("In Vector's cross(self, v: Vector) -> Vector: function......")      
+
         return Vector(self.wrapped.Crossed(v.wrapped))
 
     def add(self, v: "Vector") -> "Vector":
+        print("In Vector's add(self, v: Vector) -> Vector: function......")      
+
         return Vector(self.wrapped.Added(v.wrapped))
 
     def __add__(self, v: "Vector") -> "Vector":
+        print("In Vector's __add__(self, v: Vector) -> Vector: function......")      
+
         return self.add(v)
 
 
     def multiply(self, scale: float) -> "Vector":
         """Return a copy multiplied by the provided scalar"""
+        print("In Vector's multiply(self, scale: float) -> Vector: function......")      
+
         return Vector(self.wrapped.Multiplied(scale))
-
-    def __mul__(self, scale: float) -> "Vector":
-        return self.multiply(scale)
-
-    def __truediv__(self, denom: float) -> "Vector":
-        return self.multiply(1.0 / denom)
-
-    def __rmul__(self, scale: float) -> "Vector":
-        return self.multiply(scale)
 
     def normalized(self) -> "Vector":
         """Return a normalized version of this vector"""
+        print("In Vector's normalized(self) -> Vector: function......")      
+
         return Vector(self.wrapped.Normalized())
 
-    def Center(self) -> "Vector":
-        """Return the vector itself
-
-        The center of myself is myself.
-        Provided so that vectors, vertices, and other shapes all support a
-        common interface, when Center() is requested for all objects on the
-        stack.
-        """
-        return self
-
     def toPnt(self) -> gp_Pnt:
+        print("In Vector's toPnt(self) -> gp_Pnt: function......")      
 
         return gp_Pnt(self.wrapped.XYZ())
 
     def toDir(self) -> gp_Dir:
+        print("In Vector's toDir(self) -> gp_Dir: function......")      
 
         return gp_Dir(self.wrapped.XYZ())
-
-    def transform(self, T: "Matrix") -> "Vector":
-
-        # to gp_Pnt to obey cq transformation convention (in OCP.vectors do not translate)
-        pnt = self.toPnt()
-        pnt_t = pnt.Transformed(T.wrapped.Trsf())
-
-        return Vector(gp_Vec(pnt_t.XYZ()))
 
 class Matrix:
     pass
@@ -242,6 +202,7 @@ class Plane(object):
         bottom      +x      +z      -y
         =========== ======= ======= ======
         """
+        print("In Plane's named() function......")      
 
         namedPlanes = {
             # origin, xDir, normal
@@ -264,78 +225,6 @@ class Plane(object):
         except KeyError:
             raise ValueError("Supported names are {}".format(list(namedPlanes.keys())))
 
-    @classmethod
-    def XY(cls, origin=(0, 0, 0), xDir=Vector(1, 0, 0)):
-        plane = Plane.named("XY", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def YZ(cls, origin=(0, 0, 0), xDir=Vector(0, 1, 0)):
-        plane = Plane.named("YZ", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def ZX(cls, origin=(0, 0, 0), xDir=Vector(0, 0, 1)):
-        plane = Plane.named("ZX", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def XZ(cls, origin=(0, 0, 0), xDir=Vector(1, 0, 0)):
-        plane = Plane.named("XZ", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def YX(cls, origin=(0, 0, 0), xDir=Vector(0, 1, 0)):
-        plane = Plane.named("YX", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def ZY(cls, origin=(0, 0, 0), xDir=Vector(0, 0, 1)):
-        plane = Plane.named("ZY", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def front(cls, origin=(0, 0, 0), xDir=Vector(1, 0, 0)):
-        plane = Plane.named("front", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def back(cls, origin=(0, 0, 0), xDir=Vector(-1, 0, 0)):
-        plane = Plane.named("back", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def left(cls, origin=(0, 0, 0), xDir=Vector(0, 0, 1)):
-        plane = Plane.named("left", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def right(cls, origin=(0, 0, 0), xDir=Vector(0, 0, -1)):
-        plane = Plane.named("right", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def top(cls, origin=(0, 0, 0), xDir=Vector(1, 0, 0)):
-        plane = Plane.named("top", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
-    @classmethod
-    def bottom(cls, origin=(0, 0, 0), xDir=Vector(1, 0, 0)):
-        plane = Plane.named("bottom", origin)
-        plane._setPlaneDir(xDir)
-        return plane
-
     def __init__(
         self,
         origin: (Tuple[float, float, float] | Vector),
@@ -350,6 +239,8 @@ class Plane(object):
         :param normal: the normal direction for the plane
         :raises ValueError: if the specified xDir is not orthogonal to the provided normal
         """
+        print("In Plane's __init__() function......")      
+
         zDir = Vector(normal)
         if zDir.Length == 0.0:
             raise ValueError("normal should be non null")
@@ -366,61 +257,23 @@ class Plane(object):
         self._setPlaneDir(xDir)
         self.origin = Vector(origin)
 
-    def _eq_iter(self, other):
-        """Iterator to successively test equality"""
-        cls = type(self)
-        yield isinstance(other, Plane)  # comparison is with another Plane
-        # origins are the same
-        yield abs(self.origin - other.origin) < cls._eq_tolerance_origin
-        # z-axis vectors are parallel (assumption: both are unit vectors)
-        yield abs(self.zDir.dot(other.zDir) - 1) < cls._eq_tolerance_dot
-        # x-axis vectors are parallel (assumption: both are unit vectors)
-        yield abs(self.xDir.dot(other.xDir) - 1) < cls._eq_tolerance_dot
-
-    def __eq__(self, other):
-        return all(self._eq_iter(other))
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __repr__(self):
-        return f"Plane(origin={str(self.origin.toTuple())}, xDir={str(self.xDir.toTuple())}, normal={str(self.zDir.toTuple())})"
-
     @property
     def origin(self) -> Vector:
+        print("In Plane's origin() function......")      
+
         return self._origin
 
     @origin.setter
     def origin(self, value):
+        print("In Plane's origin() setter function......")      
+
         self._origin = Vector(value)
         self._calcTransforms()
 
-    def setOrigin2d(self, x, y):
-        """
-        Set a new origin in the plane itself
-
-        Set a new origin in the plane itself. The plane's orientation and
-        xDrection are unaffected.
-
-        :param float x: offset in the x direction
-        :param float y: offset in the y direction
-        :return: void
-
-        The new coordinates are specified in terms of the current 2D system.
-        As an example:
-
-        p = Plane.XY()
-        p.setOrigin2d(2, 2)
-        p.setOrigin2d(2, 2)
-
-        results in a plane with its origin at (x, y) = (4, 4) in global
-        coordinates. Both operations were relative to local coordinates of the
-        plane.
-        """
-        self.origin = self.toWorldCoords((x, y))
-
     def _setPlaneDir(self, xDir):
         """Set the vectors parallel to the plane, i.e. xDir and yDir"""
+        print("In Plane's _setPlaneDir() function......")      
+
         xDir = Vector(xDir)
         self.xDir = xDir.normalized()
         self.yDir = self.zDir.cross(self.xDir).normalized()
@@ -431,6 +284,9 @@ class Plane(object):
         Computes transformation matrices to convert between local and global
         coordinates.
         """
+
+        print("In Plane's _calcTransforms() function......")      
+
         # r is the forward transformation matrix from world to local coordinates
         # ok i will be really honest, i cannot understand exactly why this works
         # something bout the order of the translation and the rotation.
@@ -460,6 +316,7 @@ class Plane(object):
     
     @property
     def location(self) -> "Location":
+        print("In Plane's location() function......")      
 
         return Location(self)
     
@@ -473,43 +330,8 @@ class Location(object):
 
     wrapped: TopLoc_Location
 
-    @overload
-    def __init__(self) -> None:
-        """Empty location with not rotation or translation with respect to the original location."""
-        ...
-
-    @overload
-    def __init__(self, t: VectorLike) -> None:
-        """Location with translation t with respect to the original location."""
-        ...
-
-    @overload
-    def __init__(self, t: Plane) -> None:
-        """Location corresponding to the location of the Plane t."""
-        ...
-
-    @overload
-    def __init__(self, t: Plane, v: VectorLike) -> None:
-        """Location corresponding to the angular location of the Plane t with translation v."""
-        ...
-
-    @overload
-    def __init__(self, t: TopLoc_Location) -> None:
-        """Location wrapping the low-level TopLoc_Location object t"""
-        ...
-
-    @overload
-    def __init__(self, t: gp_Trsf) -> None:
-        """Location wrapping the low-level gp_Trsf object t"""
-        ...
-
-    @overload
-    def __init__(self, t: VectorLike, ax: VectorLike, angle: float) -> None:
-        """Location with translation t and rotation around ax by angle
-        with respect to the original location."""
-        ...
-
     def __init__(self, *args):
+        print("In Location's __init__(self, *args): function......")      
 
         T = gp_Trsf()
 

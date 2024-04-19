@@ -327,6 +327,7 @@ T = TypeVar("T", bound="Shape")
 
 class cqmultimethod(multimethod):
     def __call__(self, *args, **kwargs):
+        print("In cqmultimethod's __call__() function......")
 
         try:
             return super().__call__(*args, **kwargs)
@@ -335,6 +336,7 @@ class cqmultimethod(multimethod):
 
 
 def shapetype(obj: TopoDS_Shape) -> TopAbs_ShapeEnum:
+    print("In shapetype() function......")
 
     if obj.IsNull():
         raise ValueError("Null TopoDS_Shape object")
@@ -346,6 +348,7 @@ def downcast(obj: TopoDS_Shape) -> TopoDS_Shape:
     """
     Downcasts a TopoDS object to suitable specialized type
     """
+    print("In downcast() function......")
 
     f_downcast: Any = downcast_LUT[shapetype(obj)]
     rv = f_downcast(obj)
@@ -361,6 +364,7 @@ class Shape(object):
     forConstruction: bool
 
     def __init__(self, obj: TopoDS_Shape):
+        print("In Shape's __init__() function......")
         self.wrapped = downcast(obj)
 
         self.forConstruction = False
@@ -369,6 +373,7 @@ class Shape(object):
 
     def clean(self: T) -> T:
         """Experimental clean using ShapeUpgrade"""
+        print("In Shape's clean() function......")
 
         upgrader = ShapeUpgrade_UnifySameDomain(self.wrapped, True, True, True)
         upgrader.AllowInternalEdges(False)
@@ -379,6 +384,7 @@ class Shape(object):
     @classmethod
     def cast(cls, obj: TopoDS_Shape, forConstruction: bool = False) -> "Shape":
         "Returns the right type of wrapper, given a OCCT object"
+        print("In Shape's cast() function......")
 
         tr = None
 
@@ -416,6 +422,7 @@ class Shape(object):
             See OCCT documentation.
         :type precision_mode: int
         """
+        print("In Shape's exportStep() function......")
 
         # Handle the extra settings for the STEP export
         pcurves = 1
@@ -430,26 +437,8 @@ class Shape(object):
 
         return writer.Write(fileName)
 
-    def isNull(self) -> bool:
-        """
-        Returns true if this shape is null. In other words, it references no
-        underlying shape with the potential to be given a location and an
-        orientation.
-        """
-        return self.wrapped.IsNull()
-
-    def isSame(self, other: "Shape") -> bool:
-        """
-        Returns True if other and this shape are same, i.e. if they share the
-        same TShape with the same Locations. Orientations may differ. Also see
-        :py:meth:`isEqual`
-        """
-        return self.wrapped.IsSame(other.wrapped)
-
-    def ShapeType(self) -> Shapes:
-        return tcast(Shapes, shape_LUT[shapetype(self.wrapped)])
-
     def _entities(self, topo_type: Shapes) -> Iterable[TopoDS_Shape]:
+        print("In Shape's _entities() function......")
 
         shape_set = TopTools_IndexedMapOfShape()
         TopExp.MapShapes_s(self.wrapped, inverse_shape_LUT[topo_type], shape_set)
@@ -460,6 +449,7 @@ class Shape(object):
         """
         :returns: All the faces in this Shape
         """
+        print("In Shape's Faces() function......")
 
         return [Face(i) for i in self._entities("Face")]
     
@@ -467,6 +457,7 @@ class Shape(object):
         """
         Apply a location in relative sense (i.e. update current location) to self
         """
+        print("In Shape's move() function......")
 
         self.wrapped.Move(loc.wrapped)
 
@@ -476,85 +467,19 @@ class Shape(object):
         """
         Apply a location in relative sense (i.e. update current location) to a copy of self
         """
+        print("In Shape's moved() function......")
 
         r = self.__class__(self.wrapped.Moved(loc.wrapped))
         r.forConstruction = self.forConstruction
 
         return r
 
-    def __eq__(self, other) -> bool:
-
-        return self.isSame(other) if isinstance(other, Shape) else False
-
-    def _bool_op(
-        self,
-        args: Iterable["Shape"],
-        tools: Iterable["Shape"],
-        op: (BRepAlgoAPI_BooleanOperation | BRepAlgoAPI_Splitter),
-        parallel: bool = True,
-    ) -> "Shape":
-        """
-        Generic boolean operation
-
-        :param parallel: Sets the SetRunParallel flag, which enables parallel execution of boolean operations in OCC kernel
-        """
-
-        arg = TopTools_ListOfShape()
-        for obj in args:
-            arg.Append(obj.wrapped)
-
-        tool = TopTools_ListOfShape()
-        for obj in tools:
-            tool.Append(obj.wrapped)
-
-        op.SetArguments(arg)
-        op.SetTools(tool)
-
-        op.SetRunParallel(parallel)
-        op.Build()
-
-        return Shape.cast(op.Shape())
-
-    def cut(self, *toCut: "Shape", tol: Optional[float] = None) -> "Shape":
-        """
-        Remove the positional arguments from this Shape.
-
-        :param tol: Fuzzy mode tolerance
-        """
-
-        cut_op = BRepAlgoAPI_Cut()
-
-        if tol:
-            cut_op.SetFuzzyValue(tol)
-
-        return self._bool_op((self,), toCut, cut_op)
-
-    def fuse(
-        self, *toFuse: "Shape", glue: bool = False, tol: Optional[float] = None
-    ) -> "Shape":
-        """
-        Fuse the positional arguments with this Shape.
-
-        :param glue: Sets the glue option for the algorithm, which allows
-            increasing performance of the intersection of the input shapes
-        :param tol: Fuzzy mode tolerance
-        """
-
-        fuse_op = BRepAlgoAPI_Fuse()
-        if glue:
-            fuse_op.SetGlue(BOPAlgo_GlueEnum.BOPAlgo_GlueShift)
-        if tol:
-            fuse_op.SetFuzzyValue(tol)
-
-        rv = self._bool_op((self,), toFuse, fuse_op)
-
-        return rv
-
     def __iter__(self) -> Iterator["Shape"]:
         """
         Iterate over subshapes.
 
         """
+        print("In Shape's __iter__() function......")
 
         it = TopoDS_Iterator(self.wrapped)
 
@@ -563,18 +488,7 @@ class Shape(object):
             it.Next()
 
 class ShapeProtocol(Protocol):
-    @property
-    def wrapped(self) -> TopoDS_Shape:
-        ...
-
-    def __init__(self, wrapped: TopoDS_Shape) -> None:
-        ...
-
-    def Faces(self) -> List["Face"]:
-        ...
-
-    def geomType(self) -> Geoms:
-        ...
+    pass
 
 
 class Vertex(Shape):
@@ -607,13 +521,6 @@ class Wire(Shape, Mixin1D):
 
     wrapped: TopoDS_Wire
 
-    def _geomAdaptor(self) -> BRepAdaptor_CompCurve:
-        """
-        Return the underlying geometry
-        """
-
-        return BRepAdaptor_CompCurve(self.wrapped)
-
     @classmethod
     def makePolygon(
         cls,
@@ -624,6 +531,8 @@ class Wire(Shape, Mixin1D):
         """
         Construct a polygonal wire from points.
         """
+
+        print("In Wire's makePolygon() function......")
 
         wire_builder = BRepBuilderAPI_MakePolygon()
 
@@ -650,6 +559,7 @@ class Face(Shape):
         """
         Makes a planar face from one or more wires
         """
+        print("In Face's makeFromWires() function......")
 
         if innerWires and not outerWire.IsClosed():
             raise ValueError("Cannot build face(s): outer wire is not closed")
@@ -705,26 +615,6 @@ class Solid(Shape, Mixin3D):
 
     wrapped: TopoDS_Solid
 
-    @staticmethod
-    def isSolid(obj: Shape) -> bool:
-        """
-        Returns true if the object is a solid, false otherwise
-        """
-        if hasattr(obj, "ShapeType"):
-            if obj.ShapeType == "Solid" or (
-                obj.ShapeType == "Compound" and len(obj.Solids()) > 0
-            ):
-                return True
-        return False
-
-    @classmethod
-    def makeSolid(cls, shell: Shell) -> "Solid":
-        """
-        Makes a solid from a single shell.
-        """
-
-        return cls(ShapeFix_Solid().SolidFromShell(shell.wrapped))
-
     @classmethod
     def makeBox(
         cls,
@@ -738,55 +628,20 @@ class Solid(Shape, Mixin3D):
         makeBox(length,width,height,[pnt,dir]) -- Make a box located in pnt with the dimensions (length,width,height)
         By default pnt=Vector(0,0,0) and dir=Vector(0,0,1)
         """
+        print("In Solid's makeBox() function......")
+
         return cls(
             BRepPrimAPI_MakeBox(
                 gp_Ax2(Vector(pnt).toPnt(), Vector(dir).toDir()), length, width, height
             ).Shape()
         )
 
-    @cqmultimethod
-    def extrudeLinear(
-        cls,
-        outerWire: Wire,
-        innerWires: List[Wire],
-        vecNormal: VectorLike,
-        taper: Real = 0,
-    ) -> "Solid":
-        """
-        Attempt to extrude the list of wires into a prismatic solid in the provided direction
-
-        :param outerWire: the outermost wire
-        :param innerWires: a list of inner wires
-        :param vecNormal: a vector along which to extrude the wires
-        :param taper: taper angle, default=0
-        :return: a Solid object
-
-        The wires must not intersect
-
-        Extruding wires is very non-trivial.  Nested wires imply very different geometry, and
-        there are many geometries that are invalid. In general, the following conditions must be met:
-
-        * all wires must be closed
-        * there cannot be any intersecting or self-intersecting wires
-        * wires must be listed from outside in
-        * more than one levels of nesting is not supported reliably
-
-        This method will attempt to sort the wires, but there is much work remaining to make this method
-        reliable.
-        """
-
-        if taper == 0:
-            face = Face.makeFromWires(outerWire, innerWires)
-        else:
-            face = Face.makeFromWires(outerWire)
-
-        return cls.extrudeLinear(face, vecNormal, taper)
-
     @classmethod
-    @extrudeLinear.register
+    #@extrudeLinear.register
     def extrudeLinear(
         cls, face: Face, vecNormal: VectorLike, taper: Real = 0,
     ) -> "Solid":
+        print("In Solid's extrudeLinear() extrudeLinear.register function......")
 
         if taper == 0:
             prism_builder: Any = BRepPrimAPI_MakePrism(
@@ -822,6 +677,7 @@ class Compound(Shape, Mixin3D):
 
     @staticmethod
     def _makeCompound(listOfShapes: Iterable[TopoDS_Shape]) -> TopoDS_Compound:
+        print("In Compound's _makeCompound() function......")
 
         comp = TopoDS_Compound()
         comp_builder = TopoDS_Builder()
@@ -837,29 +693,9 @@ class Compound(Shape, Mixin3D):
         """
         Create a compound out of a list of shapes
         """
+        print("In Compound's makeCompound() function......")
 
         return cls(cls._makeCompound((s.wrapped for s in listOfShapes)))
-
-    def __bool__(self) -> bool:
-        """
-        Check if empty.
-        """
-
-        return TopoDS_Iterator(self.wrapped).More()
-
-    def cut(self, *toCut: "Shape", tol: Optional[float] = None) -> "Compound":
-        """
-        Remove the positional arguments from this Shape.
-
-        :param tol: Fuzzy mode tolerance
-        """
-
-        cut_op = BRepAlgoAPI_Cut()
-
-        if tol:
-            cut_op.SetFuzzyValue(tol)
-
-        return tcast(Compound, self._bool_op(self, toCut, cut_op))
 
     def fuse(
         self, *toFuse: Shape, glue: bool = False, tol: Optional[float] = None
@@ -867,6 +703,7 @@ class Compound(Shape, Mixin3D):
         """
         Fuse shapes together
         """
+        print("In Compound's fuse() function......")
 
         fuse_op = BRepAlgoAPI_Fuse()
         if glue:
@@ -886,40 +723,10 @@ class Compound(Shape, Mixin3D):
 
         return tcast(Compound, rv)
 
-def sortWiresByBuildOrder(wireList: List[Wire]) -> List[List[Wire]]:
-    """Tries to determine how wires should be combined into faces.
-
-    Assume:
-        The wires make up one or more faces, which could have 'holes'
-        Outer wires are listed ahead of inner wires
-        there are no wires inside wires inside wires
-        ( IE, islands -- we can deal with that later on )
-        none of the wires are construction wires
-
-    Compute:
-        one or more sets of wires, with the outer wire listed first, and inner
-        ones
-
-    Returns, list of lists.
-    """
-
-    # check if we have something to sort at all
-    if len(wireList) < 2:
-        return [
-            wireList,
-        ]
-
-    # make a Face, NB: this might return a compound of faces
-    faces = Face.makeFromWires(wireList[0], wireList[1:])
-
-    rv = []
-    for face in faces.Faces():
-        rv.append([face.outerWire(),] + face.innerWires())
-
-    return rv
-
 def wiresToFaces(wireList: List[Wire]) -> List[Face]:
     """
     Convert wires to a list of faces.
     """
+    print("In wiresToFaces() function......")
+
     return Face.makeFromWires(wireList[0], wireList[1:]).Faces()

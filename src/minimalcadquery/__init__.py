@@ -17,7 +17,7 @@ from .occ_impl.shapes import (
     Solid,
     Shell,
     Compound,
-    sortWiresByBuildOrder,
+#    sortWiresByBuildOrder,
 )
 from .occ_impl import exporters
 from .occ_impl import importers
@@ -42,7 +42,7 @@ __all__ = [
     "Matrix",
     "Vector",
     "Location",
-    "sortWiresByBuildOrder",
+#    "sortWiresByBuildOrder",
     "Shape",
     "Vertex",
     "Edge",

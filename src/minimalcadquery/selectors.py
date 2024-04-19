@@ -46,6 +46,7 @@ Shape = TypeVar("Shape", bound=ShapeProtocol)
 
 class Selector(object):
     def filter(self, objectList: Sequence[Shape]) -> List[Shape]:
+        print("In Selector's filter() function......")
         return list(objectList)
 
 class StringSyntaxSelector(Selector):

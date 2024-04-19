@@ -61,34 +61,10 @@ Geoms = Literal[
 
 
 class ShapeProtocol(Protocol):
-    def ShapeType(self) -> Shapes:
-        ...
-
-    def geomType(self) -> Geoms:
-        ...
-
-    def Center(self) -> Vector:
-        ...
-
-    def Area(self) -> float:
-        ...
+    pass
 
 class Shape1DProtocol(ShapeProtocol, Protocol):
-    def tangentAt(
-        self, p: float = 0.5, mode: Literal["length", "parameter"] = "length"
-    ) -> Vector:
-        ...
-
-    def radius(self) -> float:
-        ...
-
-    def Length(self) -> float:
-        ...
+    pass
 
 class FaceProtocol(ShapeProtocol, Protocol):
-    def normalAt(self, v: Optional[Vector] = None) -> Vector:
-        ...
-
-    @classmethod
-    def makeFromWires(cls, w: ShapeProtocol, ws: Sequence[ShapeProtocol]) -> Self:
-        ...
+    pass

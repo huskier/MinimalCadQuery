@@ -96,6 +96,7 @@ class CQContext(object):
 
         :raises ValueError: if errorOnEmpty is True and no wires are present.
         """
+        print("In CQContext's popPendingWires() function......")
         if errorOnEmpty and not self.pendingWires:
             raise ValueError("No pending wires present")
         out = self.pendingWires
@@ -135,19 +136,6 @@ class Workplane(object):
 
     _tag: Optional[str]
 
-    @overload
-    def __init__(self, obj: CQObject) -> None:
-        ...
-
-    @overload
-    def __init__(
-        self,
-        inPlane: (Plane | str) = "XY",
-        origin: VectorLike = (0, 0, 0),
-        obj: Optional[CQObject] = None,
-    ) -> None:
-        ...
-
     def __init__(self, inPlane="XY", origin=(0, 0, 0), obj=None):
         """
         make a workplane from a particular plane
@@ -169,6 +157,7 @@ class Workplane(object):
         After creation, the stack contains a single point, the origin of the underlying plane, and
         the *current point* is on the origin.
         """
+        print("In Workplane's __init__(self, inPlane=XY, origin=(0, 0, 0), obj=None): function......")        
 
         if isinstance(inPlane, Plane):
             tmpPlane = inPlane
@@ -193,36 +182,6 @@ class Workplane(object):
         self.ctx = CQContext()
         self._tag = None
 
-    def _collectProperty(self, propName: str) -> List[CQObject]:
-        """
-        Collects all of the values for propName,
-        for all items on the stack.
-
-        One weird use case is that the stack could have a solid reference object
-        on it.  This is meant to be a reference to the most recently modified version
-        of the context solid, whatever it is.
-        """
-        rv: Dict[CQObject, Any] = {}  # used as an ordered set
-
-        for o in self.objects:
-
-            # tricky-- if an object is a compound of solids,
-            # do not return all of the solids underneath-- typically
-            # then we'll keep joining to ourself
-            if (
-                propName == "Solids"
-                and isinstance(o, Solid)
-                and o.ShapeType() == "Compound"
-            ):
-                for k in getattr(o, "Compounds")():
-                    rv[k] = None
-            else:
-                if hasattr(o, propName):
-                    for k in getattr(o, propName)():
-                        rv[k] = None
-
-        return list(rv.keys())
-
     def vals(self) -> List[CQObject]:
         """
         get the values in the current list
@@ -232,9 +191,12 @@ class Workplane(object):
 
         Contrast with :meth:`all`, which returns CQ objects for all of the items on the stack
         """
+        print("In Workplane's vals() function......")        
+
         return self.objects
 
     def _findType(self, types, searchStack=True, searchParents=True):
+        print("In Workplane's _findType() function......")        
 
         if searchStack:
             rv = [s for s in self.objects if isinstance(s, types)]
@@ -259,6 +221,7 @@ class Workplane(object):
         :type objlist: a list of CAD primitives
         :return: a new Workplane object with the current workplane as a parent.
         """
+        print("In Workplane's newObject() function......")        
 
         # copy the current state to the new object
         ns = self.__class__()
@@ -267,40 +230,6 @@ class Workplane(object):
         ns.objects = list(objlist)
         ns.ctx = self.ctx
         return ns
-
-    def _findFromPoint(self, useLocalCoords: bool = False) -> Vector:
-        """
-        Finds the start point for an operation when an existing point
-        is implied.  Examples include 2d operations such as lineTo,
-        which allows specifying the end point, and implicitly use the
-        end of the previous line as the starting point
-
-        :return: a Vector representing the point to use, or none if
-        such a point is not available.
-
-        :param useLocalCoords: selects whether the point is returned
-        in local coordinates or global coordinates.
-
-        The algorithm is this:
-            * If an Edge is on the stack, its end point is used.yp
-            * if a vector is on the stack, it is used
-
-        WARNING: only the last object on the stack is used.
-
-        """
-        obj = self.objects[-1] if self.objects else self.plane.origin
-
-        if isinstance(obj, Edge):
-            p = obj.endPoint()
-        elif isinstance(obj, Vector):
-            p = obj
-        else:
-            raise RuntimeError("Cannot convert object type '%s' to vector " % type(obj))
-
-        if useLocalCoords:
-            return self.plane.toLocalCoords(p)
-        else:
-            return p
 
     def _addPendingWire(self, wire: Wire) -> None:
         """
@@ -317,6 +246,8 @@ class Workplane(object):
         Similarly, CadQuery tracks pending wires, and automatically combines them into faces
         when necessary to make a solid.
         """
+        print("In Workplane's _addPendingWire() function......")        
+
         self.ctx.pendingWires.append(wire)
 
     def eachpoint(
@@ -346,6 +277,8 @@ class Workplane(object):
         If the stack has zero length, a single point is returned, which is the center of the current
         workplane/coordinate system
         """
+        print("In Workplane's eachpoint() function......")        
+
         # convert stack to a list of points
         pnts = []
         plane = self.plane
@@ -407,6 +340,7 @@ class Workplane(object):
         Future Enhancements:
             * project points not in the workplane plane onto the workplane plane
         """
+        print("In Workplane's rect() function......")        
 
         if isinstance(centered, bool):
             centered = (centered, centered)
@@ -465,6 +399,7 @@ class Workplane(object):
         *  if combine is true, the value is combined with the context solid if it exists,
             and the resulting solid becomes the new context solid.
         """
+        print("In Workplane's extrude() function......")        
 
         # If subtractive mode is requested, use cutBlind
         if combine in ("cut", "s"):
@@ -511,6 +446,7 @@ class Workplane(object):
         :return: a new object that represents the result of combining the base object with obj,
            or obj if one could not be found
         """
+        print("In Workplane's _combineWithBase() function......")        
 
         if mode:
             # since we are going to do something convert the iterable if needed
@@ -543,6 +479,8 @@ class Workplane(object):
         :return: a new object that represents the result of combining the base object with obj,
            or obj if one could not be found
         """
+        print("In Workplane's _fuseWithBase() function......")        
+
         baseSolid = self._findType(
             (Solid, Compound), searchStack=True, searchParents=True
         )
@@ -553,26 +491,11 @@ class Workplane(object):
             r = obj.fuse()
         return self.newObject([r])
 
-    def _cutFromBase(self: T, obj: Shape) -> T:
-        """
-        Cuts the provided object from the base solid, if one can be found.
-
-        :param obj:
-        :return: a new object that represents the result of combining the base object with obj,
-           or obj if one could not be found
-        """
-        baseSolid = self._findType((Solid, Compound), True, True)
-
-        r = obj
-        if baseSolid is not None:
-            r = baseSolid.cut(obj)
-
-        return self.newObject([r])
-
     def _getFaces(self) -> List[Face]:
         """
         Convert pending wires or sketches to faces for subsequent operation
         """
+        print("In Workplane's _getFaces() function......")        
 
         rv: List[Face] = []
 
@@ -602,12 +525,15 @@ class Workplane(object):
         This method is a utility method, primarily for plugin and internal use.
         It is the basis for cutBlind, extrude, cutThruAll, and all similar methods.
         """
+        print("In Workplane's _extrude() function......")        
 
         def getFacesList(face, eDir, direction, both=False):
             """
             Utility function to make the code further below more clean and tidy
             Performs some test and raise appropriate error when no Faces are found for extrusion
             """
+            print("In Workplane's getFacesList() function......")        
+
             facesList = self.findSolid().facesIntersectedByLine(
                 face.Center(), eDir, direction=direction
             )
@@ -743,6 +669,7 @@ class Workplane(object):
             )
 
         """
+        print("In Workplane's box() function......")        
 
         if isinstance(centered, bool):
             centered = (centered, centered, centered)
@@ -780,6 +707,7 @@ class Workplane(object):
         `clean` may fail to produce a clean output in some cases such as
         spherical faces.
         """
+        print("In Workplane's clean() function......")        
 
         cleanObjects = [
             obj.clean() if isinstance(obj, Shape) else obj for obj in self.objects
