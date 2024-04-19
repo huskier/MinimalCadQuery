@@ -1,8 +1,4 @@
-import tempfile
-import os
-import io as StringIO
-
-from typing import IO, Optional, Union, cast, Dict, Any
+from typing import IO, Optional, cast, Dict, Any
 from typing_extensions import Literal
 
 from ...cq import Workplane

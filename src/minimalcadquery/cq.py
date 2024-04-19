@@ -17,26 +17,17 @@
     License along with this library; If not, see <http://www.gnu.org/licenses/>
 """
 
-import math
 from copy import copy
-from itertools import chain
 from typing import (
-    overload,
-    Sequence,
     TypeVar,
-    Union,
     Tuple,
     Optional,
-    Any,
     Iterable,
     Callable,
     List,
-    cast,
     Dict,
 )
 from typing_extensions import Literal
-from inspect import Parameter, Signature
-
 
 from .occ_impl.geom import Vector, Plane, Location
 from .occ_impl.shapes import (
@@ -47,7 +38,6 @@ from .occ_impl.shapes import (
     Solid,
     Compound,
     wiresToFaces,
-    Shapes,
 )
 
 CQObject = (Vector | Location | Shape)

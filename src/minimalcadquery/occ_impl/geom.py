@@ -1,6 +1,6 @@
 import math
 
-from typing import overload, Sequence, Union, Tuple, Type, Optional
+from typing import Tuple, Type, Optional
 
 from OCP.gp import (
     gp_Vec,
@@ -8,17 +8,11 @@ from OCP.gp import (
     gp_Ax3,
     gp_Pnt,
     gp_Dir,
-    gp_Pln,
     gp_Trsf,
     gp_GTrsf,
     gp_XYZ,
-    gp_EulerSequence,
-    gp,
 )
-from OCP.Bnd import Bnd_Box
-from OCP.BRepBndLib import BRepBndLib
-from OCP.BRepMesh import BRepMesh_IncrementalMesh
-from OCP.TopoDS import TopoDS_Shape
+
 from OCP.TopLoc import TopLoc_Location
 
 Real = (float | int)

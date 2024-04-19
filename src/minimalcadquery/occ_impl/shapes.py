@@ -1,28 +1,17 @@
 from typing import (
     Optional,
     Tuple,
-    Union,
     Iterable,
     List,
-    Sequence,
     Iterator,
-    Dict,
     Any,
-    overload,
     TypeVar,
     cast as tcast,
 )
-from typing_extensions import Literal, Protocol
+from typing_extensions import Protocol
 
-from io import BytesIO
-
-from .geom import Vector, VectorLike, Plane, Location, Matrix
-from .shape_protocols import geom_LUT_FACE, geom_LUT_EDGE, Shapes, Geoms
-
-from ..selectors import (
-    Selector,
-    StringSyntaxSelector,
-)
+from .geom import Vector, VectorLike, Location
+from .shape_protocols import Shapes
 
 # change default OCCT logging level
 from OCP.Message import Message, Message_Gravity
@@ -31,79 +20,30 @@ for printer in Message.DefaultMessenger_s().Printers():
     printer.SetTraceLevel(Message_Gravity.Message_Fail)
 
 import OCP.TopAbs as ta  # Topology type enum
-import OCP.GeomAbs as ga  # Geometry type enum
-
-from OCP.Precision import Precision
 
 from OCP.gp import (
-    gp_Vec,
-    gp_Pnt,
-    gp_Ax1,
     gp_Ax2,
-    gp_Ax3,
-    gp_Dir,
-    gp_Circ,
-    gp_Trsf,
-    gp_Pln,
-    gp_Pnt2d,
-    gp_Dir2d,
-    gp_Elips,
 )
-
-# Array of points (used for B-spline construction):
-from OCP.TColgp import TColgp_HArray1OfPnt, TColgp_HArray2OfPnt
-
-# Array of vectors (used for B-spline interpolation):
-from OCP.TColgp import TColgp_Array1OfVec
-
-# Array of booleans (used for B-spline interpolation):
-from OCP.TColStd import TColStd_HArray1OfBoolean
-
-# Array of floats (used for B-spline interpolation):
-from OCP.TColStd import TColStd_HArray1OfReal
 
 from OCP.BRepAdaptor import (
     BRepAdaptor_Curve,
-    BRepAdaptor_CompCurve,
     BRepAdaptor_Surface,
 )
 
 from OCP.BRepBuilderAPI import (
-    BRepBuilderAPI_MakeVertex,
-    BRepBuilderAPI_MakeEdge,
     BRepBuilderAPI_MakeFace,
     BRepBuilderAPI_MakePolygon,
-    BRepBuilderAPI_MakeWire,
-    BRepBuilderAPI_Sewing,
-    BRepBuilderAPI_Copy,
-    BRepBuilderAPI_GTransform,
-    BRepBuilderAPI_Transform,
-    BRepBuilderAPI_Transformed,
-    BRepBuilderAPI_RightCorner,
-    BRepBuilderAPI_RoundCorner,
-    BRepBuilderAPI_MakeSolid,
 )
 
 # properties used to store mass calculation result
-from OCP.GProp import GProp_GProps
-from OCP.BRepGProp import BRepGProp_Face, BRepGProp  # used for mass calculation
+from OCP.BRepGProp import BRepGProp  # used for mass calculation
 
 from OCP.BRepPrimAPI import (
     BRepPrimAPI_MakeBox,
-    BRepPrimAPI_MakeCone,
-    BRepPrimAPI_MakeCylinder,
-    BRepPrimAPI_MakeTorus,
-    BRepPrimAPI_MakeWedge,
     BRepPrimAPI_MakePrism,
-    BRepPrimAPI_MakeRevol,
-    BRepPrimAPI_MakeSphere,
 )
-from OCP.BRepIntCurveSurface import BRepIntCurveSurface_Inter
 
 from OCP.TopExp import TopExp  # Topology explorer
-
-# used for getting underlying geometry -- is this equivalent to brep adaptor?
-from OCP.BRep import BRep_Tool, BRep_Builder
 
 from OCP.TopoDS import (
     TopoDS,
@@ -113,157 +53,40 @@ from OCP.TopoDS import (
     TopoDS_Iterator,
     TopoDS_Wire,
     TopoDS_Face,
-    TopoDS_Edge,
-    TopoDS_Vertex,
     TopoDS_Solid,
-    TopoDS_Shell,
     TopoDS_CompSolid,
 )
 
-from OCP.GC import GC_MakeArcOfCircle, GC_MakeArcOfEllipse  # geometry construction
-from OCP.GCE2d import GCE2d_MakeSegment
-from OCP.gce import gce_MakeLin, gce_MakeDir
-from OCP.GeomAPI import (
-    GeomAPI_Interpolate,
-    GeomAPI_ProjectPointOnSurf,
-    GeomAPI_PointsToBSpline,
-    GeomAPI_PointsToBSplineSurface,
-)
-
-from OCP.BRepFill import BRepFill
-
 from OCP.BRepAlgoAPI import (
-    BRepAlgoAPI_Common,
     BRepAlgoAPI_Fuse,
-    BRepAlgoAPI_Cut,
-    BRepAlgoAPI_BooleanOperation,
-    BRepAlgoAPI_Splitter,
 )
 
-from OCP.Geom import (
-    Geom_ConicalSurface,
-    Geom_CylindricalSurface,
-    Geom_Surface,
-    Geom_Plane,
-)
-from OCP.Geom2d import Geom2d_Line
-
-from OCP.BRepLib import BRepLib, BRepLib_FindSurface
-
-from OCP.BRepOffsetAPI import (
-    BRepOffsetAPI_ThruSections,
-    BRepOffsetAPI_MakePipeShell,
-    BRepOffsetAPI_MakeThickSolid,
-    BRepOffsetAPI_MakeOffset,
-)
-
-from OCP.BRepFilletAPI import (
-    BRepFilletAPI_MakeChamfer,
-    BRepFilletAPI_MakeFillet,
-    BRepFilletAPI_MakeFillet2d,
-)
+from OCP.BRepLib import BRepLib_FindSurface
 
 from OCP.TopTools import (
-    TopTools_IndexedDataMapOfShapeListOfShape,
-    TopTools_ListOfShape,
-    TopTools_MapOfShape,
     TopTools_IndexedMapOfShape,
 )
 
 
-from OCP.ShapeFix import ShapeFix_Shape, ShapeFix_Solid, ShapeFix_Face
+from OCP.ShapeFix import ShapeFix_Shape, ShapeFix_Face
 
 from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
 
-from OCP.BRepMesh import BRepMesh_IncrementalMesh
-from OCP.StlAPI import StlAPI_Writer
-
 from OCP.ShapeUpgrade import ShapeUpgrade_UnifySameDomain
-
-from OCP.BRepTools import BRepTools, BRepTools_WireExplorer
 
 from OCP.LocOpe import LocOpe_DPrism
 
-from OCP.BRepCheck import BRepCheck_Analyzer
-
-from OCP.Font import (
-    Font_FontMgr,
-    Font_FA_Regular,
-    Font_FA_Italic,
-    Font_FA_Bold,
-    Font_SystemFont,
-)
-
-from OCP.StdPrs import StdPrs_BRepFont, StdPrs_BRepTextBuilder as Font_BRepTextBuilder
-from OCP.Graphic3d import (
-    Graphic3d_HTA_LEFT,
-    Graphic3d_HTA_CENTER,
-    Graphic3d_HTA_RIGHT,
-    Graphic3d_VTA_BOTTOM,
-    Graphic3d_VTA_CENTER,
-    Graphic3d_VTA_TOP,
-)
-
-from OCP.NCollection import NCollection_Utf8String
-
-from OCP.BRepFeat import BRepFeat_MakeDPrism
-
-from OCP.BRepClass3d import BRepClass3d_SolidClassifier
-
-from OCP.TCollection import TCollection_AsciiString
-
-from OCP.TopLoc import TopLoc_Location
-
-from OCP.GeomAbs import (
-    GeomAbs_Shape,
-    GeomAbs_C0,
-    GeomAbs_Intersection,
-    GeomAbs_JoinType,
-)
-from OCP.BRepOffsetAPI import BRepOffsetAPI_MakeFilling
-from OCP.BRepOffset import BRepOffset_MakeOffset, BRepOffset_Mode
+from OCP.StdPrs import StdPrs_BRepTextBuilder as Font_BRepTextBuilder
 
 from OCP.BOPAlgo import BOPAlgo_GlueEnum
 
 from OCP.IFSelect import IFSelect_ReturnStatus
 
-from OCP.TopAbs import TopAbs_ShapeEnum, TopAbs_Orientation
-
-from OCP.ShapeAnalysis import ShapeAnalysis_FreeBounds
-from OCP.TopTools import TopTools_HSequenceOfShape
-
-from OCP.GCPnts import GCPnts_AbscissaPoint
-
-from OCP.GeomFill import (
-    GeomFill_Frenet,
-    GeomFill_CorrectedFrenet,
-    GeomFill_TrihedronLaw,
-)
-
-from OCP.BRepProj import BRepProj_Projection
-from OCP.BRepExtrema import BRepExtrema_DistShapeShape
-
-from OCP.IVtkOCC import IVtkOCC_Shape, IVtkOCC_ShapeMesher
-from OCP.IVtkVTK import IVtkVTK_ShapeData
-
-# for catching exceptions
-from OCP.Standard import Standard_NoSuchObject, Standard_Failure
-
-from OCP.Prs3d import Prs3d_IsoAspect
-from OCP.Quantity import Quantity_Color
-from OCP.Aspect import Aspect_TOL_SOLID
+from OCP.TopAbs import TopAbs_ShapeEnum
 
 from OCP.Interface import Interface_Static
 
-from OCP.ShapeCustom import ShapeCustom, ShapeCustom_RestrictionParameters
-
-from OCP.BRepAlgo import BRepAlgo
-
-from math import pi, sqrt, inf, radians, cos
-
-import warnings
-
-from multimethod import multimethod, DispatchError
+from math import radians, cos
 
 Real = (float | int)
 
@@ -324,16 +147,6 @@ ancestors_LUT = {
 }
 
 T = TypeVar("T", bound="Shape")
-
-class cqmultimethod(multimethod):
-    def __call__(self, *args, **kwargs):
-        print("In cqmultimethod's __call__() function......")
-
-        try:
-            return super().__call__(*args, **kwargs)
-        except DispatchError:
-            return next(iter(self.values()))(*args, **kwargs)
-
 
 def shapetype(obj: TopoDS_Shape) -> TopAbs_ShapeEnum:
     print("In shapetype() function......")

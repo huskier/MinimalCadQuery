@@ -17,30 +17,11 @@
     License along with this library; If not, see <http://www.gnu.org/licenses/>
 """
 
-from abc import abstractmethod, ABC
-import math
-from .occ_impl.geom import Vector
 from .occ_impl.shape_protocols import (
     ShapeProtocol,
-    Shape1DProtocol,
-    FaceProtocol,
-    geom_LUT_EDGE,
-    geom_LUT_FACE,
 )
-from pyparsing import (
-    pyparsing_common,
-    Literal,
-    Word,
-    nums,
-    Optional,
-    Combine,
-    oneOf,
-    Group,
-    infixNotation,
-    opAssoc,
-)
-from functools import reduce
-from typing import Iterable, List, Sequence, TypeVar, cast
+
+from typing import List, Sequence, TypeVar
 
 Shape = TypeVar("Shape", bound=ShapeProtocol)
 

@@ -1,7 +1,5 @@
-from typing import Optional, Literal, Sequence
-from typing_extensions import Protocol, Self
-
-from .geom import Vector
+from typing import Literal
+from typing_extensions import Protocol
 
 import OCP.GeomAbs as ga
 

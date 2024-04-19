@@ -1,11 +1,6 @@
 from math import pi
-from typing import List, Literal
-
-import OCP.IFSelect
-from OCP.STEPControl import STEPControl_Reader
 
 from ... import cq
-from ..shapes import Shape
 
 RAD2DEG = 360.0 / (2 * pi)
 
