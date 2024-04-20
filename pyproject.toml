@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "minimalcadquery"
-version = "0.0.76"
+version = "0.1.0"
 authors = [
   { name="Simon Huskier", email="huskier@gmail.com" },
 ]
 description = "A minimal cadquery package"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["cadquery-ocp==7.7.2", "ipython", "ezdxf", "multimethod==1.9.1", "nlopt", "nptyping==2.0.1", "typish", "casadi", "path"]
+dependencies = ["cadquery-ocp==7.7.2", "typing_extensions"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

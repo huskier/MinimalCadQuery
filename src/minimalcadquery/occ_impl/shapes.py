@@ -450,7 +450,6 @@ class Solid(Shape, Mixin3D):
         )
 
     @classmethod
-    #@extrudeLinear.register
     def extrudeLinear(
         cls, face: Face, vecNormal: VectorLike, taper: Real = 0,
     ) -> "Solid":
