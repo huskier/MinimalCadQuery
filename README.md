@@ -12,20 +12,28 @@ Its primary objectives include:
 
 # Build and upload minimalcadquery
 python -m build
+
 python -m twine upload --repository testpypi dist/*
+
 
 # Using minimalcadquery in a virtual environment
 python -m venv mcpvenv
+
 python -m pip install --upgrade pip
+
 pip install wheel
-python -m pip install --extra-index-url https://test.pypi.org/simple/ --no-build-isolation minimalcadquery==0.0.5
+
+python -m pip install --extra-index-url https://test.pypi.org/simple/ --no-build-isolation minimalcadquery==0.1.0
+
 
 # For no-deps installation
-python -m pip install --index-url https://test.pypi.org/simple/ --no-deps minimalcadquery==0.0.7
+python -m pip install --index-url https://test.pypi.org/simple/ --no-deps minimalcadquery==0.1.0
 
 # Misc issues
 pip says version 40.8.0 of setuptools does not satisfy requirement of setuptools>=40.8.0
+
 pip install --no-index --find-links=deps --no-build-isolation psycopg[c]            【--no-build-isolation】
+
 
 Can't build wheel - error: invalid command 'bdist_wheel'
 Install virtualenv and pip in the global directory,create your environment, activate it and install wheel. 
