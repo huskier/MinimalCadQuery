@@ -11,7 +11,6 @@ from typing import (
 from typing_extensions import Protocol
 
 from .geom import Vector, VectorLike, Location
-from .shape_protocols import Shapes
 
 # change default OCCT logging level
 from OCP.Message import Message, Message_Gravity
@@ -87,6 +86,12 @@ from OCP.TopAbs import TopAbs_ShapeEnum
 from OCP.Interface import Interface_Static
 
 from math import radians, cos
+
+from typing import Literal
+
+Shapes = Literal[
+    "Vertex", "Edge", "Wire", "Face", "Shell", "Solid", "CompSolid", "Compound"
+]
 
 Real = (float | int)
 
@@ -300,9 +305,6 @@ class Shape(object):
             yield Shape.cast(it.Value())
             it.Next()
 
-class ShapeProtocol(Protocol):
-    pass
-
 
 class Vertex(Shape):
     """
@@ -310,11 +312,6 @@ class Vertex(Shape):
     """
 
     pass
-
-class Mixin1DProtocol(ShapeProtocol, Protocol):
-    pass
-
-T1D = TypeVar("T1D", bound=Mixin1DProtocol)
 
 
 class Mixin1D(object):
@@ -413,8 +410,6 @@ class Shell(Shape):
     """
 
     pass
-
-TS = TypeVar("TS", bound=ShapeProtocol)
 
 
 class Mixin3D(object):

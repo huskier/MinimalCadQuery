@@ -11,6 +11,7 @@ Its primary objectives include:
 3. Experimenting with adaptation to other CAD kernels.
 
 # Build and upload minimalcadquery
+The following commands should be executed in a Python environment which installed twine package.
 ```
 python -m build
 python -m twine upload --repository testpypi dist/*
