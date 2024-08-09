@@ -15,6 +15,9 @@ from OCP.gp import (
 
 from OCP.TopLoc import TopLoc_Location
 
+import logging
+logger = logging.getLogger(__name__)
+
 Real = (float | int)
 
 TOL = 1e-2
@@ -39,7 +42,8 @@ class Vector(object):
     _wrapped: gp_Vec
 
     def __init__(self, *args):
-        print("In Vector's __init__(self, *args): function......") 
+        # print("In Vector's __init__(self, *args): function......") 
+        logger.info("In Vector's __init__(self, *args): function......")
         if len(args) == 3:
             fV = gp_Vec(*args)
         elif len(args) == 2:
@@ -68,73 +72,73 @@ class Vector(object):
 
     @property
     def x(self) -> float:
-        print("In Vector's x(self) -> float: function......")      
+        # print("In Vector's x(self) -> float: function......")      
         return self.wrapped.X()
 
     @property
     def y(self) -> float:
-        print("In Vector's y(self) -> float: function......")      
+        # print("In Vector's y(self) -> float: function......")      
 
         return self.wrapped.Y()
 
     @property
     def z(self) -> float:
-        print("In Vector's z(self) -> float: function......")      
+        # print("In Vector's z(self) -> float: function......")      
 
         return self.wrapped.Z()
 
     @property
     def Length(self) -> float:
-        print("In Vector's Length(self) -> float: function......")      
+        # print("In Vector's Length(self) -> float: function......")      
 
         return self.wrapped.Magnitude()
 
     @property
     def wrapped(self) -> gp_Vec:
-        print("In Vector's wrapped(self) -> gp_Vec: function......")      
+        # print("In Vector's wrapped(self) -> gp_Vec: function......")      
 
         return self._wrapped
 
     def toTuple(self) -> Tuple[float, float, float]:
-        print("In Vector's toTuple(self) -> Tuple[float, float, float]: function......")      
+        # print("In Vector's toTuple(self) -> Tuple[float, float, float]: function......")      
 
         return (self.x, self.y, self.z)
 
     def cross(self, v: "Vector") -> "Vector":
-        print("In Vector's cross(self, v: Vector) -> Vector: function......")      
+        # print("In Vector's cross(self, v: Vector) -> Vector: function......")      
 
         return Vector(self.wrapped.Crossed(v.wrapped))
 
     def add(self, v: "Vector") -> "Vector":
-        print("In Vector's add(self, v: Vector) -> Vector: function......")      
+        # print("In Vector's add(self, v: Vector) -> Vector: function......")      
 
         return Vector(self.wrapped.Added(v.wrapped))
 
     def __add__(self, v: "Vector") -> "Vector":
-        print("In Vector's __add__(self, v: Vector) -> Vector: function......")      
+        # print("In Vector's __add__(self, v: Vector) -> Vector: function......")      
 
         return self.add(v)
 
 
     def multiply(self, scale: float) -> "Vector":
         """Return a copy multiplied by the provided scalar"""
-        print("In Vector's multiply(self, scale: float) -> Vector: function......")      
+        # print("In Vector's multiply(self, scale: float) -> Vector: function......")      
 
         return Vector(self.wrapped.Multiplied(scale))
 
     def normalized(self) -> "Vector":
         """Return a normalized version of this vector"""
-        print("In Vector's normalized(self) -> Vector: function......")      
+        # print("In Vector's normalized(self) -> Vector: function......")      
 
         return Vector(self.wrapped.Normalized())
 
     def toPnt(self) -> gp_Pnt:
-        print("In Vector's toPnt(self) -> gp_Pnt: function......")      
+        # print("In Vector's toPnt(self) -> gp_Pnt: function......")      
 
         return gp_Pnt(self.wrapped.XYZ())
 
     def toDir(self) -> gp_Dir:
-        print("In Vector's toDir(self) -> gp_Dir: function......")      
+        # print("In Vector's toDir(self) -> gp_Dir: function......")      
 
         return gp_Dir(self.wrapped.XYZ())
 
@@ -196,7 +200,7 @@ class Plane(object):
         bottom      +x      +z      -y
         =========== ======= ======= ======
         """
-        print("In Plane's named() function......")      
+        # print("In Plane's named() function......")      
 
         namedPlanes = {
             # origin, xDir, normal
@@ -233,7 +237,7 @@ class Plane(object):
         :param normal: the normal direction for the plane
         :raises ValueError: if the specified xDir is not orthogonal to the provided normal
         """
-        print("In Plane's __init__() function......")      
+        # print("In Plane's __init__() function......")      
 
         zDir = Vector(normal)
         if zDir.Length == 0.0:
@@ -253,20 +257,20 @@ class Plane(object):
 
     @property
     def origin(self) -> Vector:
-        print("In Plane's origin() function......")      
+        # print("In Plane's origin() function......")      
 
         return self._origin
 
     @origin.setter
     def origin(self, value):
-        print("In Plane's origin() setter function......")      
+        # print("In Plane's origin() setter function......")      
 
         self._origin = Vector(value)
         self._calcTransforms()
 
     def _setPlaneDir(self, xDir):
         """Set the vectors parallel to the plane, i.e. xDir and yDir"""
-        print("In Plane's _setPlaneDir() function......")      
+        # print("In Plane's _setPlaneDir() function......")      
 
         xDir = Vector(xDir)
         self.xDir = xDir.normalized()
@@ -279,7 +283,7 @@ class Plane(object):
         coordinates.
         """
 
-        print("In Plane's _calcTransforms() function......")      
+        # print("In Plane's _calcTransforms() function......")      
 
         # r is the forward transformation matrix from world to local coordinates
         # ok i will be really honest, i cannot understand exactly why this works
@@ -310,7 +314,7 @@ class Plane(object):
     
     @property
     def location(self) -> "Location":
-        print("In Plane's location() function......")      
+        # print("In Plane's location() function......")      
 
         return Location(self)
     
@@ -325,7 +329,7 @@ class Location(object):
     wrapped: TopLoc_Location
 
     def __init__(self, *args):
-        print("In Location's __init__(self, *args): function......")      
+        # print("In Location's __init__(self, *args): function......")      
 
         T = gp_Trsf()
 

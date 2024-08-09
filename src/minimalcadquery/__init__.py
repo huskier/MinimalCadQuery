@@ -41,3 +41,6 @@ __all__ = [
     "Compound",
     "exporters",
 ]
+
+import logging
+logger = logging.getLogger(__name__)

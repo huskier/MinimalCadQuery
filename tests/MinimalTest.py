@@ -1,7 +1,16 @@
 import minimalcadquery as cq
+import logging
 
-rectBasedObject = cq.Workplane().rect(10, 20).extrude(50)
-cq.exporters.export(rectBasedObject, "rectBasedObject.step", exportType = "STEP")
+logging.basicConfig(filename='test_logging_1.txt',format='[%(asctime)s,%(msecs)03d-%(filename)s-%(levelname)s:%(message)s]', level = logging.DEBUG,filemode='w',datefmt='%Y-%m-%d%I:%M:%S %p')
+logger = logging.getLogger("minimalcadquery")
 
-box = cq.Workplane().box(50, 50, 50)
-cq.exporters.export(box, "box.step", exportType = "STEP")
+
+if __name__=='__main__':
+    
+    logger.info("In MinimalTest.py file......")
+
+    rectBasedObject = cq.Workplane().rect(10, 20).extrude(50)
+    cq.exporters.export(rectBasedObject, "rectBasedObject.step", exportType = "STEP")
+
+    box = cq.Workplane().box(50, 50, 50)
+    cq.exporters.export(box, "box.step", exportType = "STEP")

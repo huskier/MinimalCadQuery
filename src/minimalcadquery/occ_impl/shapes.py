@@ -89,6 +89,9 @@ from math import radians, cos
 
 from typing import Literal
 
+import logging
+logger = logging.getLogger(__name__)
+
 Shapes = Literal[
     "Vertex", "Edge", "Wire", "Face", "Shell", "Solid", "CompSolid", "Compound"
 ]
@@ -154,7 +157,7 @@ ancestors_LUT = {
 T = TypeVar("T", bound="Shape")
 
 def shapetype(obj: TopoDS_Shape) -> TopAbs_ShapeEnum:
-    print("In shapetype() function......")
+    # print("In shapetype() function......")
 
     if obj.IsNull():
         raise ValueError("Null TopoDS_Shape object")
@@ -166,7 +169,7 @@ def downcast(obj: TopoDS_Shape) -> TopoDS_Shape:
     """
     Downcasts a TopoDS object to suitable specialized type
     """
-    print("In downcast() function......")
+    # print("In downcast() function......")
 
     f_downcast: Any = downcast_LUT[shapetype(obj)]
     rv = f_downcast(obj)
@@ -182,7 +185,8 @@ class Shape(object):
     forConstruction: bool
 
     def __init__(self, obj: TopoDS_Shape):
-        print("In Shape's __init__() function......")
+        # print("In Shape's __init__() function......")
+        logger.info("In Shape's __init__() function......")
         self.wrapped = downcast(obj)
 
         self.forConstruction = False
@@ -191,7 +195,7 @@ class Shape(object):
 
     def clean(self: T) -> T:
         """Experimental clean using ShapeUpgrade"""
-        print("In Shape's clean() function......")
+        # print("In Shape's clean() function......")
 
         upgrader = ShapeUpgrade_UnifySameDomain(self.wrapped, True, True, True)
         upgrader.AllowInternalEdges(False)
@@ -202,7 +206,7 @@ class Shape(object):
     @classmethod
     def cast(cls, obj: TopoDS_Shape, forConstruction: bool = False) -> "Shape":
         "Returns the right type of wrapper, given a OCCT object"
-        print("In Shape's cast() function......")
+        # print("In Shape's cast() function......")
 
         tr = None
 
@@ -240,7 +244,7 @@ class Shape(object):
             See OCCT documentation.
         :type precision_mode: int
         """
-        print("In Shape's exportStep() function......")
+        # print("In Shape's exportStep() function......")
 
         # Handle the extra settings for the STEP export
         pcurves = 1
@@ -256,7 +260,7 @@ class Shape(object):
         return writer.Write(fileName)
 
     def _entities(self, topo_type: Shapes) -> Iterable[TopoDS_Shape]:
-        print("In Shape's _entities() function......")
+        # print("In Shape's _entities() function......")
 
         shape_set = TopTools_IndexedMapOfShape()
         TopExp.MapShapes_s(self.wrapped, inverse_shape_LUT[topo_type], shape_set)
@@ -267,7 +271,7 @@ class Shape(object):
         """
         :returns: All the faces in this Shape
         """
-        print("In Shape's Faces() function......")
+        # print("In Shape's Faces() function......")
 
         return [Face(i) for i in self._entities("Face")]
     
@@ -275,7 +279,7 @@ class Shape(object):
         """
         Apply a location in relative sense (i.e. update current location) to self
         """
-        print("In Shape's move() function......")
+        # print("In Shape's move() function......")
 
         self.wrapped.Move(loc.wrapped)
 
@@ -285,7 +289,7 @@ class Shape(object):
         """
         Apply a location in relative sense (i.e. update current location) to a copy of self
         """
-        print("In Shape's moved() function......")
+        # print("In Shape's moved() function......")
 
         r = self.__class__(self.wrapped.Moved(loc.wrapped))
         r.forConstruction = self.forConstruction
@@ -297,7 +301,7 @@ class Shape(object):
         Iterate over subshapes.
 
         """
-        print("In Shape's __iter__() function......")
+        # print("In Shape's __iter__() function......")
 
         it = TopoDS_Iterator(self.wrapped)
 
@@ -342,7 +346,7 @@ class Wire(Shape, Mixin1D):
         Construct a polygonal wire from points.
         """
 
-        print("In Wire's makePolygon() function......")
+        # print("In Wire's makePolygon() function......")
 
         wire_builder = BRepBuilderAPI_MakePolygon()
 
@@ -369,7 +373,7 @@ class Face(Shape):
         """
         Makes a planar face from one or more wires
         """
-        print("In Face's makeFromWires() function......")
+        # print("In Face's makeFromWires() function......")
 
         if innerWires and not outerWire.IsClosed():
             raise ValueError("Cannot build face(s): outer wire is not closed")
@@ -436,7 +440,7 @@ class Solid(Shape, Mixin3D):
         makeBox(length,width,height,[pnt,dir]) -- Make a box located in pnt with the dimensions (length,width,height)
         By default pnt=Vector(0,0,0) and dir=Vector(0,0,1)
         """
-        print("In Solid's makeBox() function......")
+        # print("In Solid's makeBox() function......")
 
         return cls(
             BRepPrimAPI_MakeBox(
@@ -448,7 +452,7 @@ class Solid(Shape, Mixin3D):
     def extrudeLinear(
         cls, face: Face, vecNormal: VectorLike, taper: Real = 0,
     ) -> "Solid":
-        print("In Solid's extrudeLinear() extrudeLinear.register function......")
+        # print("In Solid's extrudeLinear() extrudeLinear.register function......")
 
         if taper == 0:
             prism_builder: Any = BRepPrimAPI_MakePrism(
@@ -484,7 +488,7 @@ class Compound(Shape, Mixin3D):
 
     @staticmethod
     def _makeCompound(listOfShapes: Iterable[TopoDS_Shape]) -> TopoDS_Compound:
-        print("In Compound's _makeCompound() function......")
+        # print("In Compound's _makeCompound() function......")
 
         comp = TopoDS_Compound()
         comp_builder = TopoDS_Builder()
@@ -500,7 +504,7 @@ class Compound(Shape, Mixin3D):
         """
         Create a compound out of a list of shapes
         """
-        print("In Compound's makeCompound() function......")
+        # print("In Compound's makeCompound() function......")
 
         return cls(cls._makeCompound((s.wrapped for s in listOfShapes)))
 
@@ -510,7 +514,7 @@ class Compound(Shape, Mixin3D):
         """
         Fuse shapes together
         """
-        print("In Compound's fuse() function......")
+        # print("In Compound's fuse() function......")
 
         fuse_op = BRepAlgoAPI_Fuse()
         if glue:
@@ -534,6 +538,6 @@ def wiresToFaces(wireList: List[Wire]) -> List[Face]:
     """
     Convert wires to a list of faces.
     """
-    print("In wiresToFaces() function......")
+    # print("In wiresToFaces() function......")
 
     return Face.makeFromWires(wireList[0], wireList[1:]).Faces()

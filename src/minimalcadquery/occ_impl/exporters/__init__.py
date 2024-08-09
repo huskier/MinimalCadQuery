@@ -4,6 +4,9 @@ from typing_extensions import Literal
 from ...cq import Workplane
 from ..shapes import Shape, Compound
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ExportTypes:
     STEP = "STEP"
     SVG = "SVG"
@@ -13,7 +16,7 @@ ExportLiterals = Literal[
 ]
 
 def toCompound(shape: Workplane) -> Compound:
-    print("In toCompound() function......")
+    # print("In toCompound() function......")
 
     return Compound.makeCompound(val for val in shape.vals() if isinstance(val, Shape))
 
@@ -40,7 +43,8 @@ def export(
     shape: Shape
     f: IO
 
-    print("In export() function......")
+    # print("In export() function......")
+    logger.info("In export() function......")
 
     if not opt:
         opt = {}
