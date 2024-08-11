@@ -16,7 +16,7 @@ ExportLiterals = Literal[
 ]
 
 def toCompound(shape: Workplane) -> Compound:
-    # print("In toCompound() function......")
+    # logger.info("In toCompound() function......")
 
     return Compound.makeCompound(val for val in shape.vals() if isinstance(val, Shape))
 
@@ -43,7 +43,6 @@ def export(
     shape: Shape
     f: IO
 
-    # print("In export() function......")
     logger.info("In export() function......")
 
     if not opt:

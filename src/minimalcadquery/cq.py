@@ -89,7 +89,7 @@ class CQContext(object):
 
         :raises ValueError: if errorOnEmpty is True and no wires are present.
         """
-        # print("In CQContext's popPendingWires() function......")
+        # logger.info("In CQContext's popPendingWires() function......")        
         if errorOnEmpty and not self.pendingWires:
             raise ValueError("No pending wires present")
         out = self.pendingWires
@@ -150,7 +150,6 @@ class Workplane(object):
         After creation, the stack contains a single point, the origin of the underlying plane, and
         the *current point* is on the origin.
         """
-        # print("In Workplane's __init__(self, inPlane=XY, origin=(0, 0, 0), obj=None): function......")        
         logger.info("In Workplane's __init__(self, inPlane=XY, origin=(0, 0, 0), obj=None): function......")
 
         if isinstance(inPlane, Plane):
@@ -185,12 +184,12 @@ class Workplane(object):
 
         Contrast with :meth:`all`, which returns CQ objects for all of the items on the stack
         """
-        # print("In Workplane's vals() function......")        
+        # logger.info("In Workplane's vals() function......")        
 
         return self.objects
 
     def _findType(self, types, searchStack=True, searchParents=True):
-        # print("In Workplane's _findType() function......")        
+        # logger.info("In Workplane's _findType() function......")        
 
         if searchStack:
             rv = [s for s in self.objects if isinstance(s, types)]
@@ -215,7 +214,7 @@ class Workplane(object):
         :type objlist: a list of CAD primitives
         :return: a new Workplane object with the current workplane as a parent.
         """
-        # print("In Workplane's newObject() function......")        
+        # logger.info("In Workplane's newObject() function......")        
 
         # copy the current state to the new object
         ns = self.__class__()
@@ -240,7 +239,7 @@ class Workplane(object):
         Similarly, CadQuery tracks pending wires, and automatically combines them into faces
         when necessary to make a solid.
         """
-        # print("In Workplane's _addPendingWire() function......")        
+        # logger.info("In Workplane's _addPendingWire() function......")        
 
         self.ctx.pendingWires.append(wire)
 
@@ -271,7 +270,7 @@ class Workplane(object):
         If the stack has zero length, a single point is returned, which is the center of the current
         workplane/coordinate system
         """
-        # print("In Workplane's eachpoint() function......")        
+        # logger.info("In Workplane's eachpoint() function......")        
 
         # convert stack to a list of points
         pnts = []
@@ -334,7 +333,7 @@ class Workplane(object):
         Future Enhancements:
             * project points not in the workplane plane onto the workplane plane
         """
-        # print("In Workplane's rect() function......")        
+        # logger.info("In Workplane's rect() function......")        
 
         if isinstance(centered, bool):
             centered = (centered, centered)
@@ -393,7 +392,7 @@ class Workplane(object):
         *  if combine is true, the value is combined with the context solid if it exists,
             and the resulting solid becomes the new context solid.
         """
-        # print("In Workplane's extrude() function......")        
+        # logger.info("In Workplane's extrude() function......")        
 
         # If subtractive mode is requested, use cutBlind
         if combine in ("cut", "s"):
@@ -440,7 +439,7 @@ class Workplane(object):
         :return: a new object that represents the result of combining the base object with obj,
            or obj if one could not be found
         """
-        # print("In Workplane's _combineWithBase() function......")        
+        # logger.info("In Workplane's _combineWithBase() function......")        
 
         if mode:
             # since we are going to do something convert the iterable if needed
@@ -473,7 +472,7 @@ class Workplane(object):
         :return: a new object that represents the result of combining the base object with obj,
            or obj if one could not be found
         """
-        # print("In Workplane's _fuseWithBase() function......")        
+        # logger.info("In Workplane's _fuseWithBase() function......")        
 
         baseSolid = self._findType(
             (Solid, Compound), searchStack=True, searchParents=True
@@ -489,7 +488,7 @@ class Workplane(object):
         """
         Convert pending wires or sketches to faces for subsequent operation
         """
-        # print("In Workplane's _getFaces() function......")        
+        # logger.info("In Workplane's _getFaces() function......")        
 
         rv: List[Face] = []
 
@@ -519,14 +518,14 @@ class Workplane(object):
         This method is a utility method, primarily for plugin and internal use.
         It is the basis for cutBlind, extrude, cutThruAll, and all similar methods.
         """
-        # print("In Workplane's _extrude() function......")        
+        # logger.info("In Workplane's _extrude() function......")        
 
         def getFacesList(face, eDir, direction, both=False):
             """
             Utility function to make the code further below more clean and tidy
             Performs some test and raise appropriate error when no Faces are found for extrusion
             """
-            # print("In Workplane's getFacesList() function......")        
+            # logger.info("In Workplane's getFacesList() function......")        
 
             facesList = self.findSolid().facesIntersectedByLine(
                 face.Center(), eDir, direction=direction
@@ -663,7 +662,7 @@ class Workplane(object):
             )
 
         """
-        # print("In Workplane's box() function......")        
+        # logger.info("In Workplane's box() function......")        
 
         if isinstance(centered, bool):
             centered = (centered, centered, centered)
@@ -701,7 +700,7 @@ class Workplane(object):
         `clean` may fail to produce a clean output in some cases such as
         spherical faces.
         """
-        # print("In Workplane's clean() function......")        
+        # logger.info("In Workplane's clean() function......")        
 
         cleanObjects = [
             obj.clean() if isinstance(obj, Shape) else obj for obj in self.objects
