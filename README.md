@@ -29,6 +29,17 @@ python -m pip install --extra-index-url https://test.pypi.org/simple/ --no-build
 ```
 python -m pip install --index-url https://test.pypi.org/simple/ --no-deps minimalcadquery==0.1.0
 ```
+# For local developing and testing
+```
+(mcq) PS D:\development\hobbies\CAD\MinimalCadQuery\dist> pip show minimalcadquery
+WARNING: Package(s) not found: minimalcadquery
+
+(mcq) PS D:\development\hobbies\CAD\MinimalCadQuery\dist> pip install minimalcadquery-0.1.12-py3-none-any.whl
+
+(mcq) PS D:\development\hobbies\CAD\MinimalCadQuery\dist> pip show minimalcadquery
+
+(mcq) PS D:\development\hobbies\CAD\MinimalCadQuery\dist> pip uninstall minimalcadquery
+```
 
 # Misc issues
 pip says version 40.8.0 of setuptools does not satisfy requirement of setuptools>=40.8.0

@@ -10,12 +10,12 @@ except PackageNotFoundError:
 from .occ_impl.geom import Plane, Vector, Matrix, Location
 from .occ_impl.shapes import (
     Shape,
-    Vertex,
+#    Vertex,
     Edge,
     Face,
     Wire,
     Solid,
-    Shell,
+#    Shell,
     Compound,
 )
 from .occ_impl import exporters
@@ -32,12 +32,12 @@ __all__ = [
     "Vector",
     "Location",
     "Shape",
-    "Vertex",
+#    "Vertex",
     "Edge",
     "Wire",
     "Face",
     "Solid",
-    "Shell",
+#    "Shell",
     "Compound",
     "exporters",
 ]
