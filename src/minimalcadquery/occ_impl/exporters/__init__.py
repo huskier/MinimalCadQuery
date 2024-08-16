@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 class ExportTypes:
     STEP = "STEP"
-    SVG = "SVG"
 
 ExportLiterals = Literal[
     "STEP"

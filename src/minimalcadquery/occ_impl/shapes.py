@@ -24,18 +24,10 @@ from OCP.gp import (
     gp_Ax2,
 )
 
-from OCP.BRepAdaptor import (
-    BRepAdaptor_Curve,
-    BRepAdaptor_Surface,
-)
-
 from OCP.BRepBuilderAPI import (
     BRepBuilderAPI_MakeFace,
     BRepBuilderAPI_MakePolygon,
 )
-
-# properties used to store mass calculation result
-from OCP.BRepGProp import BRepGProp  # used for mass calculation
 
 from OCP.BRepPrimAPI import (
     BRepPrimAPI_MakeBox,
@@ -66,7 +58,6 @@ from OCP.TopTools import (
     TopTools_IndexedMapOfShape,
 )
 
-
 from OCP.ShapeFix import ShapeFix_Shape, ShapeFix_Face
 
 from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
@@ -74,8 +65,6 @@ from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
 from OCP.ShapeUpgrade import ShapeUpgrade_UnifySameDomain
 
 from OCP.LocOpe import LocOpe_DPrism
-
-from OCP.StdPrs import StdPrs_BRepTextBuilder as Font_BRepTextBuilder
 
 from OCP.BOPAlgo import BOPAlgo_GlueEnum
 
@@ -102,24 +91,14 @@ TOLERANCE = 1e-6
 HASH_CODE_MAX = 2147483647  # max 32bit signed int, required by OCC.Core.HashCode
 
 shape_LUT = {
-    ta.TopAbs_VERTEX: "Vertex",
+    #ta.TopAbs_VERTEX: "Vertex",
     ta.TopAbs_EDGE: "Edge",
     ta.TopAbs_WIRE: "Wire",
     ta.TopAbs_FACE: "Face",
-    ta.TopAbs_SHELL: "Shell",
+    #ta.TopAbs_SHELL: "Shell",
     ta.TopAbs_SOLID: "Solid",
     ta.TopAbs_COMPSOLID: "CompSolid",
     ta.TopAbs_COMPOUND: "Compound",
-}
-
-shape_properties_LUT = {
-    ta.TopAbs_VERTEX: None,
-    ta.TopAbs_EDGE: BRepGProp.LinearProperties_s,
-    ta.TopAbs_WIRE: BRepGProp.LinearProperties_s,
-    ta.TopAbs_FACE: BRepGProp.SurfaceProperties_s,
-    ta.TopAbs_SHELL: BRepGProp.SurfaceProperties_s,
-    ta.TopAbs_SOLID: BRepGProp.VolumeProperties_s,
-    ta.TopAbs_COMPOUND: BRepGProp.VolumeProperties_s,
 }
 
 inverse_shape_LUT = {v: k for k, v in shape_LUT.items()}
@@ -133,25 +112,6 @@ downcast_LUT = {
     ta.TopAbs_SOLID: TopoDS.Solid_s,
     ta.TopAbs_COMPSOLID: TopoDS.CompSolid_s,
     ta.TopAbs_COMPOUND: TopoDS.Compound_s,
-}
-
-geom_LUT = {
-    ta.TopAbs_VERTEX: "Vertex",
-    ta.TopAbs_EDGE: BRepAdaptor_Curve,
-    ta.TopAbs_WIRE: "Wire",
-    ta.TopAbs_FACE: BRepAdaptor_Surface,
-    ta.TopAbs_SHELL: "Shell",
-    ta.TopAbs_SOLID: "Solid",
-    ta.TopAbs_SOLID: "CompSolid",
-    ta.TopAbs_COMPOUND: "Compound",
-}
-
-ancestors_LUT = {
-    "Vertex": ta.TopAbs_EDGE,
-    "Edge": ta.TopAbs_WIRE,
-    "Wire": ta.TopAbs_FACE,
-    "Face": ta.TopAbs_SHELL,
-    "Shell": ta.TopAbs_SOLID,
 }
 
 T = TypeVar("T", bound="Shape")
@@ -211,11 +171,11 @@ class Shape(object):
 
         # define the shape lookup table for casting
         constructor_LUT = {
-            ta.TopAbs_VERTEX: Vertex,
+            #ta.TopAbs_VERTEX: Vertex,
             ta.TopAbs_EDGE: Edge,
             ta.TopAbs_WIRE: Wire,
             ta.TopAbs_FACE: Face,
-            ta.TopAbs_SHELL: Shell,
+            #ta.TopAbs_SHELL: Shell,
             ta.TopAbs_SOLID: Solid,
             ta.TopAbs_COMPSOLID: CompSolid,
             ta.TopAbs_COMPOUND: Compound,
@@ -308,15 +268,6 @@ class Shape(object):
             yield Shape.cast(it.Value())
             it.Next()
 
-
-class Vertex(Shape):
-    """
-    A Single Point in Space
-    """
-
-    pass
-
-
 class Mixin1D(object):
 
     pass
@@ -406,14 +357,6 @@ class Face(Shape):
         sf_f.Perform()
 
         return cls(sf_f.Result())
-
-class Shell(Shape):
-    """
-    the outer boundary of a surface
-    """
-
-    pass
-
 
 class Mixin3D(object):
 
@@ -527,9 +470,6 @@ class Compound(Shape, Mixin3D):
             rv: Shape = args[0]
         else:
             rv = self._bool_op(args[:1], args[1:], fuse_op)
-
-        # fuse_op.RefineEdges()
-        # fuse_op.FuseEdges()
 
         return tcast(Compound, rv)
 

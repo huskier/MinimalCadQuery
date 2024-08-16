@@ -24,7 +24,6 @@ TOL = 1e-2
 
 VectorLike = ("Vector" | Tuple[Real, Real] | Tuple[Real, Real, Real])
 
-
 class Vector(object):
     """Create a 3-dimensional vector
 
