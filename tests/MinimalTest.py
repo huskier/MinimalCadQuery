@@ -1,7 +1,7 @@
 import minimalcadquery as cq
 import logging
 
-logging.basicConfig(filename='test_logging_1.txt',format='[%(asctime)s,%(msecs)03d-%(filename)s-%(levelname)s:%(message)s]', level = logging.DEBUG,filemode='w',datefmt='%Y-%m-%d%I:%M:%S %p')
+logging.basicConfig(filename='test_logging_1.txt',format='[%(asctime)s,%(msecs)03d-%(filename)s-line_%(lineno)d-%(levelname)s:%(message)s]', level = logging.DEBUG,filemode='w',datefmt='%Y-%m-%d%I:%M:%S %p')
 logger = logging.getLogger("minimalcadquery")
 
 

@@ -22,7 +22,6 @@ from .occ_impl import exporters
 
 from .cq import CQ, Workplane
 
-
 __all__ = [
     "CQ",
     "Workplane",

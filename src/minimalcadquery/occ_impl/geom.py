@@ -41,7 +41,7 @@ class Vector(object):
     _wrapped: gp_Vec
 
     def __init__(self, *args):
-        logger.info("In Vector's __init__(self, *args): function......")
+        logger.info("Vector's __init__() is called")
         if len(args) == 3:
             fV = gp_Vec(*args)
         elif len(args) == 2:
@@ -70,73 +70,73 @@ class Vector(object):
 
     @property
     def x(self) -> float:
-        # logger.info("In Vector's x(self) -> float: function......")      
+        logger.info("Vector's x() is called")      
         return self.wrapped.X()
 
     @property
     def y(self) -> float:
-        # logger.info("In Vector's y(self) -> float: function......")      
+        logger.info("Vector's y() is called")      
 
         return self.wrapped.Y()
 
     @property
     def z(self) -> float:
-        # logger.info("In Vector's z(self) -> float: function......")      
+        logger.info("Vector's z() is called")      
 
         return self.wrapped.Z()
 
     @property
     def Length(self) -> float:
-        # logger.info("In Vector's Length(self) -> float: function......")      
+        logger.info("Vector's Length() is called")      
 
         return self.wrapped.Magnitude()
 
     @property
     def wrapped(self) -> gp_Vec:
-        # logger.info("In Vector's wrapped(self) -> gp_Vec: function......")      
+        logger.info("Vector's wrapped() is called")      
 
         return self._wrapped
 
     def toTuple(self) -> Tuple[float, float, float]:
-        # logger.info("In Vector's toTuple(self) -> Tuple[float, float, float]: function......")      
+        logger.info("Vector's toTuple() is called")      
 
         return (self.x, self.y, self.z)
 
     def cross(self, v: "Vector") -> "Vector":
-        # logger.info("In Vector's cross(self, v: Vector) -> Vector: function......")      
+        logger.info("Vector's cross() is called")      
 
         return Vector(self.wrapped.Crossed(v.wrapped))
 
     def add(self, v: "Vector") -> "Vector":
-        # logger.info("In Vector's add(self, v: Vector) -> Vector: function......")      
+        logger.info("Vector's add() is called")      
 
         return Vector(self.wrapped.Added(v.wrapped))
 
     def __add__(self, v: "Vector") -> "Vector":
-        # logger.info("In Vector's __add__(self, v: Vector) -> Vector: function......")      
+        logger.info("Vector's __add__() is called")      
 
         return self.add(v)
 
 
     def multiply(self, scale: float) -> "Vector":
         """Return a copy multiplied by the provided scalar"""
-        # logger.info("In Vector's multiply(self, scale: float) -> Vector: function......")      
+        logger.info("Vector's multiply() is called")      
 
         return Vector(self.wrapped.Multiplied(scale))
 
     def normalized(self) -> "Vector":
         """Return a normalized version of this vector"""
-        # logger.info("In Vector's normalized(self) -> Vector: function......")      
+        logger.info("Vector's normalized() is called")      
 
         return Vector(self.wrapped.Normalized())
 
     def toPnt(self) -> gp_Pnt:
-        # logger.info("In Vector's toPnt(self) -> gp_Pnt: function......")      
+        logger.info("Vector's toPnt() is called")      
 
         return gp_Pnt(self.wrapped.XYZ())
 
     def toDir(self) -> gp_Dir:
-        # logger.info("In Vector's toDir(self) -> gp_Dir: function......")      
+        logger.info("Vector's toDir() is called")      
 
         return gp_Dir(self.wrapped.XYZ())
 
@@ -198,7 +198,7 @@ class Plane(object):
         bottom      +x      +z      -y
         =========== ======= ======= ======
         """
-        # logger.info("In Plane's named() function......")      
+        logger.info("Plane's named() is called")      
 
         namedPlanes = {
             # origin, xDir, normal
@@ -235,7 +235,7 @@ class Plane(object):
         :param normal: the normal direction for the plane
         :raises ValueError: if the specified xDir is not orthogonal to the provided normal
         """
-        # logger.info("In Plane's __init__() function......")      
+        logger.info("Plane's __init__() is called")      
 
         zDir = Vector(normal)
         if zDir.Length == 0.0:
@@ -255,20 +255,20 @@ class Plane(object):
 
     @property
     def origin(self) -> Vector:
-        # logger.info("In Plane's origin() function......")      
+        logger.info("Plane's origin() is called")      
 
         return self._origin
 
     @origin.setter
     def origin(self, value):
-        # logger.info("In Plane's origin() setter function......")      
+        logger.info("Plane's origin() setter is called")      
 
         self._origin = Vector(value)
         self._calcTransforms()
 
     def _setPlaneDir(self, xDir):
         """Set the vectors parallel to the plane, i.e. xDir and yDir"""
-        # logger.info("In Plane's _setPlaneDir() function......")      
+        logger.info("Plane's _setPlaneDir() is called")      
 
         xDir = Vector(xDir)
         self.xDir = xDir.normalized()
@@ -281,7 +281,7 @@ class Plane(object):
         coordinates.
         """
 
-        # logger.info("In Plane's _calcTransforms() function......")      
+        logger.info("Plane's _calcTransforms() is called")      
 
         # r is the forward transformation matrix from world to local coordinates
         # ok i will be really honest, i cannot understand exactly why this works
@@ -312,7 +312,7 @@ class Plane(object):
     
     @property
     def location(self) -> "Location":
-        # logger.info("In Plane's location() function......")      
+        logger.info("Plane's location() is called")      
 
         return Location(self)
     
@@ -327,7 +327,7 @@ class Location(object):
     wrapped: TopLoc_Location
 
     def __init__(self, *args):
-        # logger.info("In Location's __init__(self, *args): function......")      
+        logger.info("Location's __init__() is called")      
 
         T = gp_Trsf()
 

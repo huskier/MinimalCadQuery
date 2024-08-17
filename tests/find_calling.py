@@ -1,0 +1,78 @@
+
+def search_str(file_path, word):
+    with open(file_path, 'r') as file:
+        content = file.read()
+        if word in content:
+            #print(word + ' exists in the file')
+            pass
+        else:
+            print(word + " does not exist in the file")
+
+target_str_list = []
+
+target_str_list.append("exporters' toCompound() is called")
+target_str_list.append("exporters' export() is called")
+
+target_str_list.append("CQContext's __init__() is called")
+target_str_list.append("CQContext's popPendingWires() is called")
+target_str_list.append("Workplane's __init__() is called")
+target_str_list.append("Workplane's vals() is called")
+target_str_list.append("Workplane's _findType() is called")
+target_str_list.append("Workplane's newObject() is called")
+target_str_list.append("Workplane's _addPendingWire() is called")
+target_str_list.append("Workplane's eachpoint() is called")
+target_str_list.append("Workplane's rect() is called")
+target_str_list.append("Workplane's extrude() is called")
+target_str_list.append("Workplane's _combineWithBase() is called")
+target_str_list.append("Workplane's _fuseWithBase() is called")
+target_str_list.append("Workplane's _getFaces() is called")
+target_str_list.append("Workplane's _extrude() is called")
+target_str_list.append("Workplane's getFacesList() is called")
+target_str_list.append("Workplane's box() is called")
+target_str_list.append("Workplane's clean() is called")
+
+target_str_list.append("Vector's __init__() is called")
+target_str_list.append("Vector's x() is called")
+target_str_list.append("Vector's y() is called")
+target_str_list.append("Vector's z() is called")
+target_str_list.append("Vector's Length() is called")
+target_str_list.append("Vector's wrapped() is called")
+target_str_list.append("Vector's toTuple() is called")
+target_str_list.append("Vector's cross() is called")
+target_str_list.append("Vector's add() is called")
+target_str_list.append("Vector's __add__() is called")
+target_str_list.append("Vector's multiply() is called")
+target_str_list.append("Vector's normalized() is called")
+target_str_list.append("Vector's toPnt() is called")
+target_str_list.append("Vector's toDir() is called")
+target_str_list.append("Plane's named() is called")
+target_str_list.append("Plane's __init__() is called")
+target_str_list.append("Plane's origin() is called")
+target_str_list.append("Plane's origin() setter is called")
+target_str_list.append("Plane's _setPlaneDir() is called")
+target_str_list.append("Plane's _calcTransforms() is called")
+target_str_list.append("Plane's location() is called")
+target_str_list.append("Location's __init__() is called")
+
+target_str_list.append("shapetype() is called")
+target_str_list.append("downcast() is called")
+target_str_list.append("Shape's __init__() is called")
+target_str_list.append("Shape's clean() is called")
+target_str_list.append("Shape's cast() is called")
+target_str_list.append("Shape's exportStep() is called")
+target_str_list.append("Shape's _entities() is called")
+target_str_list.append("Shape's Faces() is called")
+target_str_list.append("Shape's move() is called")
+target_str_list.append("Shape's moved() is called")
+target_str_list.append("Shape's __iter__() is called")
+target_str_list.append("Wire's makePolygon() is called")
+target_str_list.append("Face's makeFromWires() is called")
+target_str_list.append("Solid's makeBox() is called")
+target_str_list.append("Solid's extrudeLinear() is called")
+target_str_list.append("Compound's _makeCompound() is called")
+target_str_list.append("Compound's makeCompound() is called")
+target_str_list.append("Compound's fuse() is called")
+target_str_list.append("wiresToFaces() is called")
+
+for target_str in target_str_list:
+    search_str(r'E:/software/hobbies/CAD/MinimalCadQuery/dist/test_logging_1.txt', target_str)
